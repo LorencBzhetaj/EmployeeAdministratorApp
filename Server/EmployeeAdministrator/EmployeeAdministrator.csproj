@@ -19,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Modules\AuthModule\DTOs\" />
     <Folder Include="Shared\" />
   </ItemGroup>
 
