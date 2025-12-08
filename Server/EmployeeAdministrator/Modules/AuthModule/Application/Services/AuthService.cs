@@ -84,18 +84,23 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
             }
         }
 
-        public string GenerateJwtToken(IdentityUser user)
+        public async Task<string> GenerateJwtToken(IdentityUser user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
-            {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(ClaimTypes.Name, user.UserName)
-        };
+ 
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var claims = new List<Claim>
+    {
+        new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+        new Claim(JwtRegisteredClaimNames.Email, user.Email),
+        new Claim(ClaimTypes.Name, user.UserName)
+    };
+
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
@@ -106,6 +111,51 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<LoginResponse> Login(LoginRequest loginRequest)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(loginRequest.Email);
+
+                if(user == null)
+                {
+                    return new LoginResponse
+                    {
+                        Success = false,
+                        Message = "User Email or Password Incorrect!"
+                    };
+                }
+
+                if(!await _userManager.CheckPasswordAsync(user, loginRequest.Password))
+                {
+                    return new LoginResponse
+                    {
+                        Success = false,
+                        Message = "User Email or Password Incorrect!"
+                    };
+                }
+
+                var  token =await GenerateJwtToken(user);
+
+                return new LoginResponse
+                {
+                    Success = true,
+                    Message = "Login Successful",
+                    Token = token
+                };
+
+
+
+            }catch (Exception ex)
+            {
+                return new LoginResponse
+                {
+                    Success = false,
+                    Message = ex.ToString()
+                };
+            }
         }
     }
 }

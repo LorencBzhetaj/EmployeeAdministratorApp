@@ -36,5 +36,20 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
             }
         }
 
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginRequest loginRequest)
+        {
+            try
+            {
+                var response = await _authService.Login(loginRequest);
+
+                return Ok(response);
+
+            }catch (Exception ex)
+            {
+                return BadRequest($"Failed to login {ex.Message}");
+            }
+        }
     }
 }
