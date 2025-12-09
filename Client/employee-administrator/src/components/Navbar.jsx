@@ -7,19 +7,13 @@ export default function Navbar() {
         to="/"
         className="hover:text-blue-500 transition-colors font-medium"
       >
-        Home
+        Project Management
       </Link>
       <Link
-        to="/about"
+        to="/profile"
         className="hover:text-blue-500 transition-colors font-medium"
       >
-        About
-      </Link>
-      <Link
-        to="/contact"
-        className="hover:text-blue-500 transition-colors font-medium"
-      >
-        Contact
+        User Profile
       </Link>
     </nav>
   );

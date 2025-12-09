@@ -1,19 +1,30 @@
 // App.jsx
-import './App.css';
-import { Routes, Route } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import "./App.css";
+import { Routes, Route } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Navigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
-import Layout from './components/Layout';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import ProtectedRoute from './components/ProtectedRoute';
+import Layout from "./components/Layout";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { loadUser } from "./store/authSlice";
+import UserProfile from "./pages/UserProfile";
 
 export default function App() {
-  const user = useSelector((state) => state.auth.user);
+  const dispatch = useDispatch();
+
+  dispatch(loadUser());
+
+  const token = useSelector((state) => state.auth.token);
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Layout /> : <Login />} />
+      <Route
+        path="/login"
+        element={token ? <Navigate to="/"></Navigate> : <Login />}
+      />
       <Route
         path="/"
         element={
@@ -23,6 +34,7 @@ export default function App() {
         }
       >
         <Route index element={<Home />} />
+        <Route path="/profile" element={<UserProfile></UserProfile>} />
       </Route>
     </Routes>
   );

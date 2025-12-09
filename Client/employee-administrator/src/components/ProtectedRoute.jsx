@@ -1,11 +1,11 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
-import { Navigate } from 'react-router-dom';
+import React from "react";
+import { useSelector } from "react-redux";
+import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children }) {
-  const user = useSelector((state) => state.auth.user);
+  const token = useSelector((state) => state.auth.token);
 
-  if (!user) {
+  if (!token) {
     return <Navigate to="/login" replace />;
   }
 
