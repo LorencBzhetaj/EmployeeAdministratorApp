@@ -4,6 +4,14 @@ using EmployeeAdministrator.Modules.AuthModule.Application.Interfaces;
 using EmployeeAdministrator.Modules.AuthModule.Application.Services;
 using EmployeeAdministrator.Modules.AuthModule.Domain;
 using EmployeeAdministrator.Modules.AuthModule.Infrastructure;
+using EmployeeAdministrator.Modules.ProjectsModule.Application.Interfaces;
+using EmployeeAdministrator.Modules.ProjectsModule.Application.Services;
+using EmployeeAdministrator.Modules.ProjectsModule.Domain;
+using EmployeeAdministrator.Modules.ProjectsModule.Infrastructure;
+using EmployeeAdministrator.Modules.TasksModule.Application.Interfaces;
+using EmployeeAdministrator.Modules.TasksModule.Application.Services;
+using EmployeeAdministrator.Modules.TasksModule.Domain;
+using EmployeeAdministrator.Modules.TasksModule.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +23,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

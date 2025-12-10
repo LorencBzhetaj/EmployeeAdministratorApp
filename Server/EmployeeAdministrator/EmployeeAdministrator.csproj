@@ -19,6 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Modules\ProjectsModule\DTOs\" />
+    <Folder Include="Modules\TasksModule\DTOs\" />
     <Folder Include="Shared\" />
   </ItemGroup>
 
