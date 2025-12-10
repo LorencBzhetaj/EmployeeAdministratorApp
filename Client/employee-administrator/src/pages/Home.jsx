@@ -1,3 +1,17 @@
+import Projects from "../components/Home/Projects";
+import Tasks from "../components/Home/Task/Tasks";
+import { useState } from "react";
+
 export default function Home() {
-  return <h1>Home Page</h1>;
+
+  const [selectedProject, setSelectedProject] = useState(0);
+
+  return (
+    <>
+      <div className="flex-1 flex justify-center items-center">
+        <Projects setSelectedProject={setSelectedProject}></Projects>
+        <Tasks selectedProject={selectedProject}></Tasks>
+      </div>
+    </>
+  );
 }
