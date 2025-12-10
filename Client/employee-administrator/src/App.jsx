@@ -8,6 +8,7 @@ import { useDispatch } from "react-redux";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import AdminDashboard from "./pages/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { loadUser } from "./store/authSlice";
 import UserProfile from "./pages/UserProfile";
@@ -35,6 +36,7 @@ export default function App() {
       >
         <Route index element={<Home />} />
         <Route path="/profile" element={<UserProfile></UserProfile>} />
+        <Route path="/admin" element={<AdminDashboard></AdminDashboard>} />
       </Route>
     </Routes>
   );

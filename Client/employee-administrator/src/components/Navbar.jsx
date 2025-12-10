@@ -15,6 +15,12 @@ export default function Navbar() {
       >
         User Profile
       </Link>
+      <Link
+        to="/admin"
+        className="hover:text-blue-500 transition-colors font-medium"
+      >
+        Admin Dashboard
+      </Link>
     </nav>
   );
 }
