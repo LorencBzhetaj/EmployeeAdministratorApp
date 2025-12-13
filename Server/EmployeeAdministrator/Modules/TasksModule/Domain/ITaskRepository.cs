@@ -1,6 +1,15 @@
-﻿namespace EmployeeAdministrator.Modules.TasksModule.Domain
+﻿using EmployeeAdministrator.Modules.TasksModule.DTOs;
+
+namespace EmployeeAdministrator.Modules.TasksModule.Domain
 {
-    public class ITaskRepository
+    public interface ITaskRepository
     {
+        Task<CreateTaskResponse> CreateTask(CreateTaskRequest request);
+
+        Task<EditTaskResponse> EditTask(EditTaskRequest request);
+
+        Task<DeleteTaskResponse> DeleteTask(int taskId);
+
+        Task<GetTaskResponse> GetTask();
     }
 }
