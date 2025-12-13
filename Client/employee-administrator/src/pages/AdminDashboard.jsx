@@ -38,7 +38,7 @@ export default function AdminDashboard() {
           ) : activeTab === "project" ? (
             <ProjectManager />
           ) : (
-            <p className="text-lg">
+            <p className="text-lg text-black">
               Welcome to the Admin Dashboard. Here you can manage users,tasks
               and projects.
             </p>
