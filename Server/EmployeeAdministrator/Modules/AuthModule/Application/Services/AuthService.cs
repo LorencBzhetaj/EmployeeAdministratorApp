@@ -84,6 +84,35 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
             }
         }
 
+        public async Task<DeleteUserResponse> DeleteUser(string userId)
+        {
+            try
+            {
+                var response = await _authRepository.DeleteUser(userId);
+
+                return response;
+
+            }catch (Exception ex)
+            {
+                return new DeleteUserResponse();
+            }
+        }
+
+        public async Task<EditUserResponse> EditUser(EditUserRequest request)
+        {
+            try
+            {
+                var response = await _authRepository.EditUser(request);
+
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                return new EditUserResponse();
+            }
+        }
+
         public async Task<string> GenerateJwtToken(IdentityUser user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
@@ -111,6 +140,34 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<GetUserProfileResponse> GetUserProfile(string userId)
+        {
+            try
+            {
+                var response = await _authRepository.GetUserProfile(userId);
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                return new GetUserProfileResponse();
+            }
+        }
+
+        public async Task<GetUsersResponse> GetUsers()
+        {
+            try
+            {
+                var response = await _authRepository.GetUsers();
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                return new GetUsersResponse();
+            }
         }
 
         public async Task<LoginResponse> Login(LoginRequest loginRequest)

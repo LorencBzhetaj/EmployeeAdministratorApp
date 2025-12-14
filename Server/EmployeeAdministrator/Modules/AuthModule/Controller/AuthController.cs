@@ -30,7 +30,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
 
                 return Ok(response);
 
-            }catch(Exception ex)
+            } catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -46,9 +46,69 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
 
                 return Ok(response);
 
-            }catch (Exception ex)
+            } catch (Exception ex)
             {
                 return BadRequest($"Failed to login {ex.Message}");
+            }
+        }
+
+        [HttpGet("get-user-profile/{userId}")]
+        public async Task<IActionResult> GetUserProfile(string userId)
+        {
+            try
+            {
+                var response = await _authService.GetUserProfile(userId);
+
+                return Ok(response);
+
+            }catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("get-users")]
+        public async Task<IActionResult> GetUsers()
+        {
+            try
+            {
+                var response = await _authService.GetUsers();
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("edit-user")]
+        public async Task<IActionResult> EditUser([FromBody]EditUserRequest editUserRequest)
+        {
+            try
+            {
+                var response = await _authService.EditUser(editUserRequest);
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("delete-user/{userId}")]
+        public async Task<IActionResult> DeleteUser(string userId)
+        {
+            try
+            {
+                var response = await _authService.DeleteUser(userId);
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
         }
     }

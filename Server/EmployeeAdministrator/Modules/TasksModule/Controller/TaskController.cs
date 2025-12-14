@@ -31,7 +31,7 @@ namespace EmployeeAdministrator.Modules.TasksModule.Controller
         }
 
         [HttpPost("create-task")]
-        public async Task<IActionResult> CreateTask(CreateTaskRequest request)
+        public async Task<IActionResult> CreateTask([FromBody]CreateTaskRequest request)
         {
             try
             {
@@ -46,7 +46,7 @@ namespace EmployeeAdministrator.Modules.TasksModule.Controller
         }
 
         [HttpPost("edit-task")]
-        public async Task<IActionResult> EditTask(EditTaskRequest request)
+        public async Task<IActionResult> EditTask([FromBody]EditTaskRequest request)
         {
             try
             {

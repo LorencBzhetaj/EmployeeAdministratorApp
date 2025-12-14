@@ -32,7 +32,7 @@ namespace EmployeeAdministrator.Modules.ProjectsModule.Controller
         }
 
         [HttpPost("create-project")]
-        public async Task<IActionResult> CreateProject(CreateProjectRequest request)
+        public async Task<IActionResult> CreateProject([FromBody] CreateProjectRequest request)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace EmployeeAdministrator.Modules.ProjectsModule.Controller
         }
 
         [HttpPost("edit-project")]
-        public async Task<IActionResult> EditProject(EditProjectRequest request)
+        public async Task<IActionResult> EditProject([FromBody] EditProjectRequest request)
         {
             try
             {
