@@ -1,14 +1,28 @@
 import { useState } from "react";
 import CreateTask from "./CreateTask";
 
-export default function Tasks({ selectedProject, tasks }) {
+export default function Tasks({
+  selectedProject,
+  tasks,
+  openModal,
+  setIsViewingTask,
+}) {
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
-  // Filter tasks by selectedProject
   const filteredTasks =
     selectedProject !== 0
       ? tasks.filter((task) => task.projectId === selectedProject)
       : [];
+
+  const handleModal = (projectId) => {
+    openModal();
+
+    const task = filteredTasks.find((t) => t.id === projectId);
+
+    console.log(task);
+
+    setIsViewingTask(task);
+  };
 
   return (
     <div className="h-150 w-1/2 flex flex-col items-center justify-start gap-4">
@@ -48,7 +62,11 @@ export default function Tasks({ selectedProject, tasks }) {
             {filteredTasks.length > 0 && (
               <ul>
                 {filteredTasks.map((task) => (
-                  <li key={task.id} className="mb-2">
+                  <li
+                    key={task.id}
+                    className="mb-2"
+                    onClick={() => handleModal(task.id)}
+                  >
                     <h3 className="text-lg font-semibold">{task.title}</h3>
                     <p className="text-gray-600">{task.description}</p>
                   </li>
