@@ -1,4 +1,6 @@
 import { useState } from "react";
+import UserList from "../DisplayComponents/UserList";
+import axios from "axios";
 
 const initialState = {
   userName: "",
@@ -19,7 +21,7 @@ export default function UserManager() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const payload = {
@@ -28,7 +30,12 @@ export default function UserManager() {
       password: form.password,
     };
 
-    console.log(payload);
+    var response = await axios.post(
+      "https://localhost:44322/api/Auth/create-user",
+      payload
+    );
+
+    console.log(response.data);
   };
 
   const renderContent = () => {
@@ -111,7 +118,7 @@ export default function UserManager() {
         return (
           <>
             <div className="w-3/4 h-full flex items-center justify-center">
-              <h1>User List!</h1>
+              <UserList></UserList>
             </div>
           </>
         );

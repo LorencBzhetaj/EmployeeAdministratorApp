@@ -1,5 +1,6 @@
 import { useState } from "react";
 import ProjectList from "../DisplayComponents/ProjectList";
+import axios from "axios";
 
 const initialState = {
   name: "",
@@ -32,7 +33,7 @@ export default function ProjectManager() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const payload = {
@@ -48,7 +49,12 @@ export default function ProjectManager() {
         : [],
     };
 
-    console.log(payload);
+    var response = await axios.post(
+      "https://localhost:44322/api/project/create-project",
+      payload
+    );
+
+    console.log(response.data);
   };
 
   const renderContent = () => {

@@ -5,18 +5,18 @@ export default function ProjectList() {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      const data = Array.from({ length: 20 }).map((_, i) => ({
-        name: `Project ${i + 1}`,
-        description: `Description for project ${i + 1}`,
-        isCompleted: i % 2 === 0,
-        dueDate: "2025-12-13T16:10:05.023Z",
-        assignedUserIds: [`user${i + 1}`],
-        projectTasks: [`Task ${i + 1}`],
-      }));
-      setProjects(data);
+      const response = await fetch(
+        "https://localhost:44322/api/project/get-projects"
+      );
+      const data = await response.json();
+
+      console.log(data);
+      setProjects(data.projects);
     };
 
     fetchProjects();
+
+    console.log(projects);
   }, []);
 
   const handleEdit = (index) => {

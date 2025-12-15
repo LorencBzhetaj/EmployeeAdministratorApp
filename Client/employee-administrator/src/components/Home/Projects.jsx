@@ -1,20 +1,34 @@
-export default function Projects({setSelectedProject}) {
+import { useState, useEffect, use } from "react";
 
-  const projects = [
-    { id: 1, title: "Car Rental App", description: "A platform to rent cars online." },
-    { id: 2, title: "Marketing Website", description: "Create business landing pages easily." },
-    { id: 3, title: "E-Commerce Shop", description: "Online shop with React + .NET backend." },
-  ];
+export default function Projects({ setSelectedProject }) {
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const response = await fetch(
+        "https://localhost:44322/api/project/get-projects"
+      );
+      const data = await response.json();
+
+      console.log(data);
+      setProjects(data.projects);
+    };
+
+    fetchProjects();
+
+    console.log(projects);
+  }, []);
 
   const handleProjectClick = (projectid) => {
     setSelectedProject(projectid);
-  }
+  };
 
-    return (<>
+  return (
+    <>
       <div className="h-150 w-1/2 flex flex-col items-center justify-start gap-4">
         <h1 className="text-3xl font-bold">Projects</h1>
 
-         {projects.map((project) => (
+        {projects.map((project) => (
           <div
             key={project.id}
             className="bg-white p-4 rounded-lg shadow w-5/6 flex flex-col justify-center items-center"
@@ -25,5 +39,6 @@ export default function Projects({setSelectedProject}) {
           </div>
         ))}
       </div>
-    </>);
+    </>
+  );
 }
