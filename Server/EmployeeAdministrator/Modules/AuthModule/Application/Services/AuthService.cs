@@ -194,13 +194,19 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
                     };
                 }
 
-                var  token =await GenerateJwtToken(user);
+                var  token = await GenerateJwtToken(user);
+
+                var userDetails =await GetUserProfile(user.Id);
+
+
 
                 return new LoginResponse
                 {
                     Success = true,
                     Message = "Login Successful",
-                    Token = token
+                    Token = token,
+                    UserRole = userDetails.UserRoles,
+                    UserName = user.UserName,
                 };
 
 

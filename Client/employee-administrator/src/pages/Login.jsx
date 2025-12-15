@@ -22,7 +22,14 @@ export default function Login() {
       console.log(response.data);
 
       if (response.data.success) {
-        dispatch(login(response.data.token));
+        dispatch(
+          login({
+            token: response.data.token,
+            userName: response.data.userName,
+            userRole: response.data.userRole,
+            userId: response.data.userId,
+          })
+        );
       }
     } catch (error) {
       console.error("Login error:", error);
