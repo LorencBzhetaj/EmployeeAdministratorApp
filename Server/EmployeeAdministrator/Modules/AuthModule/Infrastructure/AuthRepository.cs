@@ -1,8 +1,10 @@
 ﻿using EmployeeAdministrator.DataLayer;
+using EmployeeAdministrator.Migrations;
 using EmployeeAdministrator.Modules.AuthModule.Domain;
 using EmployeeAdministrator.Modules.AuthModule.DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Customer = EmployeeAdministrator.Modules.AuthModule.DTOs.Customer;
 
 namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
 {
@@ -101,9 +103,68 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
             }
         }
 
-        public Task<EditUserResponse> EditUser(EditUserRequest request)
+        public async Task<EditUserResponse> EditUser(EditUserRequest request)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var user = await _dbContext.Customers.FirstOrDefaultAsync(u=>u.UserId==request.userId);
+
+                if(user == null)
+                {
+                    var customer = new Customer
+                    {
+                        UserId = request.userId,
+                        FullName = request.FullName
+                    };
+
+                        if (request.Photo != null && request.Photo.Length > 0)
+                    {
+                        using var ms = new MemoryStream();
+                        await request.Photo.CopyToAsync(ms);
+
+                        customer.Photo = ms.ToArray();
+                        customer.PhotoContentType = request.Photo.ContentType;  
+                    }
+
+                   _dbContext.Customers.Add(customer);
+                    await _dbContext.SaveChangesAsync();
+
+                    return new EditUserResponse
+                    {
+                        Success = true,
+                        Message = "User Updated Successfully"
+                    };
+                }
+
+                user.FullName = request.FullName;
+
+                if (request.Photo != null && request.Photo.Length > 0)
+                {
+                    using var ms = new MemoryStream();
+                    await request.Photo.CopyToAsync(ms);
+
+                    user.Photo = ms.ToArray();
+                    user.PhotoContentType = request.Photo.ContentType;
+                }
+                await _dbContext.SaveChangesAsync();
+
+                return new EditUserResponse
+                {
+                    Success = true,
+                    Message = "User Created Successfully"
+                };
+
+            }
+            catch ( Exception ex )
+            {
+                return new EditUserResponse
+                {
+                    Success = false,
+                    Message = "Repository Error:" + ex.Message
+                };
+
+            }
         }
 
         public async Task<DeleteUserResponse> DeleteUser(string userId)

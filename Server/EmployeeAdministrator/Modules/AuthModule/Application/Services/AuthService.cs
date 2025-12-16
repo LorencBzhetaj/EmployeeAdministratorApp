@@ -109,7 +109,11 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
             }
             catch (Exception ex)
             {
-                return new EditUserResponse();
+                return new EditUserResponse
+                {
+                    Success = false,
+                    Message = "Service Error :" + ex.Message
+                };
             }
         }
 

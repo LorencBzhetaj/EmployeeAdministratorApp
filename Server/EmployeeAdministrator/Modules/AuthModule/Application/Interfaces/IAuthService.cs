@@ -18,5 +18,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Interfaces
         public Task<EditUserResponse> EditUser(EditUserRequest request);
 
         public Task<DeleteUserResponse> DeleteUser(string userId);
+
+
     }
 }

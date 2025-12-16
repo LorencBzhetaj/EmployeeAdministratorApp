@@ -83,7 +83,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
         }
 
         [HttpPost("edit-user")]
-        public async Task<IActionResult> EditUser([FromBody]EditUserRequest editUserRequest)
+        public async Task<IActionResult> EditUser([FromForm]EditUserRequest editUserRequest)
         {
             try
             {

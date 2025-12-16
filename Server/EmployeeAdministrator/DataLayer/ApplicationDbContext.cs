@@ -1,4 +1,5 @@
 ﻿
+using EmployeeAdministrator.Modules.AuthModule.DTOs;
 using EmployeeAdministrator.Modules.ProjectsModule.DTOs;
 using EmployeeAdministrator.Modules.TasksModule.DTOs;
 using Microsoft.AspNetCore.Identity;
@@ -15,5 +16,7 @@ namespace EmployeeAdministrator.DataLayer
         public DbSet<Project> Projects { get; set; }
 
         public DbSet<EmployeeAdministrator.Modules.TasksModule.DTOs.Task> Tasks { get; set; }
+
+        public DbSet<Customer> Customers { get; set; }
     }
 }
