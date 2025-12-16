@@ -18,9 +18,7 @@ export default function Navbar() {
     <nav className="flex items-center justify-between p-4 border-b border-black bg-white">
       <div className="flex flex-col">
         <span className="font-medium">{userName}</span>
-        <span className="text-sm text-gray-600">
-          {userRole ? userRole[0] : ""}
-        </span>
+        <span className="text-sm text-gray-600">{userRole}</span>
       </div>
 
       <div className="flex gap-6">
@@ -36,12 +34,14 @@ export default function Navbar() {
         >
           User Profile
         </Link>
-        <Link
-          to="/admin"
-          className="hover:text-blue-500 transition-colors font-medium"
-        >
-          Admin Dashboard
-        </Link>
+        {userRole == "Admin" && (
+          <Link
+            to="/admin"
+            className="hover:text-blue-500 transition-colors font-medium"
+          >
+            Admin Dashboard
+          </Link>
+        )}
       </div>
 
       <div>

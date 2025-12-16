@@ -207,6 +207,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
                     Token = token,
                     UserRole = userDetails.UserRoles,
                     UserName = user.UserName,
+                    UserId = user.Id
                 };
 
 

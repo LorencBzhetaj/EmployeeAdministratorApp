@@ -1,7 +1,10 @@
 import { useState, useEffect, use } from "react";
+import { useSelector } from "react-redux";
 
 export default function Projects({ setSelectedProject }) {
   const [projects, setProjects] = useState([]);
+
+  const userId = useSelector((state) => state.auth.userId);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -10,8 +13,11 @@ export default function Projects({ setSelectedProject }) {
       );
       const data = await response.json();
 
-      console.log(data);
-      setProjects(data.projects);
+      const filteredProjects = projects.filter((p) =>
+        p.assignedUserIds?.includes(userId)
+      );
+
+      setProjects(filteredProjects);
     };
 
     fetchProjects();

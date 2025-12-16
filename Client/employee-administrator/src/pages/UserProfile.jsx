@@ -1,61 +1,66 @@
-import React from "react";
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import axios from "axios";
 
 export default function UserProfile() {
-  const userData = {
-    user: {
-      id: "9a1f758d-06f6-485c-ad87-943a9933cfd4",
-      userName: "admin@example.com",
-      email: "admin@example.com",
-      emailConfirmed: true,
-      phoneNumber: null,
-      twoFactorEnabled: false,
-      lockoutEnabled: true,
-      accessFailedCount: 0,
-    },
-    userRoles: ["Admin"],
-  };
+  const userId = useSelector((state) => state.auth.userId);
+  const role = useSelector((state) => state.auth.userRole);
+  const [user, setUser] = useState(null);
 
-  const { user, userRoles } = userData;
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get(
+          `https://localhost:44322/api/auth/get-user-profile/${userId}`
+        );
+
+        console.log(response.data);
+        setUser(response.data.user);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchUser();
+  }, [userId]);
+
+  if (!user) {
+    return <div className="p-8">Loading...</div>;
+  }
 
   return (
     <div className="h-120 w-full flex justify-center items-center p-8">
-      <div className="w-full h-full max-w-md bg-white border border-gray-300 rounded-lg shadow-md p-6">
+      <div className="w-full h-full max-w-md bg-white border rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4">User Profile</h2>
-        <div className="mb-2">
-          <span className="font-medium">ID: </span>
-          <span>{user.id}</span>
+
+        <div>
+          <b>ID:</b> {user.id}
         </div>
-        <div className="mb-2">
-          <span className="font-medium">Username: </span>
-          <span>{user.userName}</span>
+        <div>
+          <b>Username:</b> {user.userName}
         </div>
-        <div className="mb-2">
-          <span className="font-medium">Email: </span>
-          <span>{user.email}</span>
+        <div>
+          <b>Email:</b> {user.email}
         </div>
-        <div className="mb-2">
-          <span className="font-medium">Email Confirmed: </span>
-          <span>{user.emailConfirmed ? "Yes" : "No"}</span>
+        <div>
+          <b>Email Confirmed:</b> {user.emailConfirmed ? "Yes" : "No"}
         </div>
-        <div className="mb-2">
-          <span className="font-medium">Phone Number: </span>
-          <span>{user.phoneNumber || "N/A"}</span>
+        <div>
+          <b>Phone:</b> {user.phoneNumber ?? "N/A"}
         </div>
-        <div className="mb-2">
-          <span className="font-medium">Two Factor Enabled: </span>
-          <span>{user.twoFactorEnabled ? "Yes" : "No"}</span>
+        <div>
+          <b>2FA:</b> {user.twoFactorEnabled ? "Yes" : "No"}
         </div>
-        <div className="mb-2">
-          <span className="font-medium">Lockout Enabled: </span>
-          <span>{user.lockoutEnabled ? "Yes" : "No"}</span>
+        <div>
+          <b>Lockout:</b> {user.lockoutEnabled ? "Yes" : "No"}
         </div>
-        <div className="mb-2">
-          <span className="font-medium">Access Failed Count: </span>
-          <span>{user.accessFailedCount}</span>
+        <div>
+          <b>Failed Count:</b> {user.accessFailedCount}
         </div>
-        <div className="mt-4">
-          <span className="font-medium">Roles: </span>
-          <span>{userRoles.join(", ")}</span>
+        <div>
+          <b>Roles:</b> {role}
         </div>
       </div>
     </div>
