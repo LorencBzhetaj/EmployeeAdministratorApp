@@ -1,5 +1,6 @@
 ﻿using EmployeeAdministrator.Modules.TasksModule.Application.Interfaces;
 using EmployeeAdministrator.Modules.TasksModule.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeAdministrator.Modules.TasksModule.Controller
@@ -16,6 +17,7 @@ namespace EmployeeAdministrator.Modules.TasksModule.Controller
         }
 
         [HttpGet("get-tasks")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> GetTasks()
         {
             try
@@ -31,6 +33,7 @@ namespace EmployeeAdministrator.Modules.TasksModule.Controller
         }
 
         [HttpPost("create-task")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> CreateTask([FromBody]CreateTaskRequest request)
         {
             try
@@ -46,6 +49,7 @@ namespace EmployeeAdministrator.Modules.TasksModule.Controller
         }
 
         [HttpPost("edit-task")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> EditTask([FromBody]EditTaskRequest request)
         {
             try
@@ -61,6 +65,7 @@ namespace EmployeeAdministrator.Modules.TasksModule.Controller
         }
 
         [HttpDelete("delete-task/{taskId}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteTask(string taskId)
         {
             try

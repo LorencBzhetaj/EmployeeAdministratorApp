@@ -5,6 +5,7 @@ import axios from "axios";
 export default function UserProfile() {
   const userId = useSelector((state) => state.auth.userId);
   const role = useSelector((state) => state.auth.userRole);
+  const token = useSelector((state) => state.auth.token);
 
   const [user, setUser] = useState(null);
   const [fullName, setFullName] = useState("");
@@ -17,7 +18,12 @@ export default function UserProfile() {
 
     const fetchUser = async () => {
       const { data } = await axios.get(
-        `https://localhost:44322/api/auth/get-user-profile/${userId}`
+        `https://localhost:44322/api/auth/get-user-profile/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       const u = data.user ?? data;
       setUser(u);
@@ -45,7 +51,12 @@ export default function UserProfile() {
     try {
       const { data } = await axios.post(
         `https://localhost:44322/api/auth/edit-user`,
-        formData
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setUser(data.user ?? data);
       setPhoto(null);
@@ -66,7 +77,6 @@ export default function UserProfile() {
   return (
     <div className="min-h-screen bg-gray-50 p-6 flex justify-center">
       <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Profile Overview */}
         <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center md:items-start">
           <div className="flex flex-col items-center md:items-start gap-4">
             <img
@@ -117,8 +127,6 @@ export default function UserProfile() {
             </div>
           </div>
         </div>
-
-        {/* Edit Profile */}
         <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-4">
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
             Edit Profile

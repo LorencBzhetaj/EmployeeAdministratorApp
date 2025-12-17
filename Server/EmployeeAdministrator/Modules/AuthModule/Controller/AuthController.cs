@@ -1,7 +1,6 @@
 ﻿using EmployeeAdministrator.Modules.AuthModule.Application.Interfaces;
 using EmployeeAdministrator.Modules.AuthModule.DTOs;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,6 +21,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
 
 
         [HttpPost("create-user")]
+        [Authorize(Roles ="Admin")]
         public async Task<IActionResult> CreateUser(CreateUserRequest createUserRequest)
         {
             try
@@ -53,6 +53,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
         }
 
         [HttpGet("get-user-profile/{userId}")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> GetUserProfile(string userId)
         {
             try
@@ -68,6 +69,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
         }
 
         [HttpGet("get-users")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetUsers()
         {
             try
@@ -83,6 +85,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
         }
 
         [HttpPost("edit-user")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> EditUser([FromForm]EditUserRequest editUserRequest)
         {
             try
@@ -98,6 +101,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
         }
 
         [HttpDelete("delete-user/{userId}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string userId)
         {
             try

@@ -1,5 +1,6 @@
 ﻿using EmployeeAdministrator.Modules.ProjectsModule.Application.Interfaces;
 using EmployeeAdministrator.Modules.ProjectsModule.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,6 +18,7 @@ namespace EmployeeAdministrator.Modules.ProjectsModule.Controller
         }
 
         [HttpGet("get-projects")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> GetProjects()
         {
             try
@@ -32,6 +34,7 @@ namespace EmployeeAdministrator.Modules.ProjectsModule.Controller
         }
 
         [HttpPost("create-project")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateProject([FromBody] CreateProjectRequest request)
         {
             try
@@ -47,6 +50,7 @@ namespace EmployeeAdministrator.Modules.ProjectsModule.Controller
         }
 
         [HttpPost("edit-project")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> EditProject([FromBody] EditProjectRequest request)
         {
             try
@@ -62,6 +66,7 @@ namespace EmployeeAdministrator.Modules.ProjectsModule.Controller
         }
 
         [HttpDelete("delete-project/{projectId}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteProject(string projectId)
         {
             try

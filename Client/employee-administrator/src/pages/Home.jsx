@@ -13,12 +13,18 @@ export default function Home() {
 
   const userRole = useSelector((state) => state.auth.userRole);
   const userId = useSelector((state) => state.auth.userId);
+  const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         const response = await axios.get(
-          "https://localhost:44322/api/task/get-tasks"
+          "https://localhost:44322/api/task/get-tasks",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         let tasksData = response.data.tasks;

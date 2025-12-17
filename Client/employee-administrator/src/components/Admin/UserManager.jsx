@@ -1,6 +1,7 @@
 import { useState } from "react";
 import UserList from "../DisplayComponents/UserList";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const initialState = {
   userName: "",
@@ -11,6 +12,7 @@ const initialState = {
 export default function UserManager() {
   const [form, setForm] = useState(initialState);
   const [selectedMethod, setSelectedMethod] = useState("");
+  const token = useSelector((state) => state.auth.token);
 
   const changeMethod = (method) => {
     setSelectedMethod(method);
@@ -32,10 +34,13 @@ export default function UserManager() {
 
     var response = await axios.post(
       "https://localhost:44322/api/Auth/create-user",
-      payload
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
-
-    console.log(response.data);
   };
 
   const renderContent = () => {

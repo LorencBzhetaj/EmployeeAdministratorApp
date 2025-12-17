@@ -1,14 +1,21 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 
 export default function UserList() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
     async function fetchUsers() {
       try {
         const response = await fetch(
-          "https://localhost:44322/api/Auth/get-users"
+          "https://localhost:44322/api/Auth/get-users",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const data = await response.json();
         setUsers(data.users);
@@ -30,6 +37,9 @@ export default function UserList() {
         `https://localhost:44322/api/Auth/delete-user/${userId}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 

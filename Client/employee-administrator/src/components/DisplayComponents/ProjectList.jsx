@@ -14,12 +14,18 @@ export default function ProjectList() {
 
   const userId = useSelector((state) => state.auth.userId);
   const userRole = useSelector((state) => state.auth.userRole);
+  const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         const response = await axios.get(
-          "https://localhost:44322/api/task/get-tasks"
+          "https://localhost:44322/api/task/get-tasks",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         let tasksData = response.data.tasks;
@@ -36,7 +42,12 @@ export default function ProjectList() {
   useEffect(() => {
     const fetchProjects = async () => {
       const response = await fetch(
-        "https://localhost:44322/api/project/get-projects"
+        "https://localhost:44322/api/project/get-projects",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       const data = await response.json();
       setProjects(data.projects);
@@ -59,7 +70,12 @@ export default function ProjectList() {
       const project = projects[index];
       const response = await fetch(
         `https://localhost:44322/api/project/delete-project/${project.id}`,
-        { method: "DELETE" }
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       if (!response.ok) throw new Error("Failed to delete project");
 
@@ -90,7 +106,10 @@ export default function ProjectList() {
         `https://localhost:44322/api/project/edit-project`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(projectToSave),
         }
       );
@@ -132,7 +151,10 @@ export default function ProjectList() {
         `https://localhost:44322/api/project/edit-project`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({ ...project, projectTasks: updatedTasks }),
         }
       );

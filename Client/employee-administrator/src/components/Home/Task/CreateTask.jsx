@@ -1,11 +1,13 @@
 import { useState } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 export default function CreateTask({ selectedProject, onCreate }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [assignedUserIds, setAssignedUserIds] = useState([""]);
+  const token = useSelector((state) => state.auth.token);
 
   const addAssignedUser = () => setAssignedUserIds([...assignedUserIds, ""]);
 
@@ -31,7 +33,12 @@ export default function CreateTask({ selectedProject, onCreate }) {
 
     var response = await axios.post(
       "https://localhost:44322/api/task/create-task",
-      newTask
+      newTask,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
 
     console.log("Response:", response.data);

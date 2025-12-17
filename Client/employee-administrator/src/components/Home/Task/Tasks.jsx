@@ -16,11 +16,7 @@ export default function Tasks({
 
   const handleModal = (projectId) => {
     openModal();
-
     const task = filteredTasks.find((t) => t.id === projectId);
-
-    console.log(task);
-
     setIsViewingTask(task);
   };
 

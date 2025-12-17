@@ -1,10 +1,12 @@
 import { useState } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 export default function ViewTask({ closeModal, task, setIsViewingTask }) {
   if (!task) return null;
   const [showAssignInput, setShowAssignInput] = useState(false);
   const [userId, setUserId] = useState("");
+  const token = useSelector((state) => state.auth.token);
 
   const handleAssignUser = async () => {
     if (task.assignedUserIds.includes(userId)) {
@@ -21,7 +23,12 @@ export default function ViewTask({ closeModal, task, setIsViewingTask }) {
     try {
       const response = await axios.post(
         "https://localhost:44322/api/Task/edit-task",
-        updatedTask
+        updatedTask,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       console.log(response.data);
     } catch (error) {

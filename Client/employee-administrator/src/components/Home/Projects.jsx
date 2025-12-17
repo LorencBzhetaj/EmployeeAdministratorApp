@@ -4,13 +4,18 @@ import { useSelector } from "react-redux";
 export default function Projects({ setSelectedProject }) {
   const [projects, setProjects] = useState([]);
   const userRole = useSelector((state) => state.auth.userRole);
-
   const userId = useSelector((state) => state.auth.userId);
+  const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
     const fetchProjects = async () => {
       const response = await fetch(
-        "https://localhost:44322/api/project/get-projects"
+        "https://localhost:44322/api/project/get-projects",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       const data = await response.json();
 
