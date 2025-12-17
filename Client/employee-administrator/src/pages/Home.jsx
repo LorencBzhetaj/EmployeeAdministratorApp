@@ -1,8 +1,9 @@
 import Projects from "../components/Home/Projects";
 import Tasks from "../components/Home/Task/Tasks";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import axios from "axios";
 import ViewTask from "../components/Home/Task/ViewTask";
+import { useSelector } from "react-redux";
 
 export default function Home() {
   const [selectedProject, setSelectedProject] = useState(0);
@@ -10,17 +11,35 @@ export default function Home() {
   const [isViewingTask, setIsViewingTask] = useState();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const userRole = useSelector((state) => state.auth.userRole);
+  const userId = useSelector((state) => state.auth.userId);
+
   useEffect(() => {
     const fetchTasks = async () => {
-      var response = await axios.get(
-        "https://localhost:44322/api/task/get-tasks"
-      );
+      try {
+        const response = await axios.get(
+          "https://localhost:44322/api/task/get-tasks"
+        );
 
-      setTasks(response.data.tasks);
+        let tasksData = response.data.tasks;
+
+        console.log(tasksData);
+
+        if (userRole !== "Admin") {
+          tasksData = tasksData.filter((task) =>
+            task.assignedUserIds?.some((id) => id === userId)
+          );
+        }
+
+        setTasks(tasksData);
+        console.log("Filtered tasks:", tasksData);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
     };
 
     fetchTasks();
-  }, [isViewingTask]);
+  }, [isViewingTask, userRole, userId]);
 
   const openModal = () => {
     setIsModalOpen(true);

@@ -1,25 +1,26 @@
-import { useDispatch } from "react-redux";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { login } from "../store/authSlice";
 import axios from "axios";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const dispatch = useDispatch();
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
     try {
       const response = await axios.post(
         "https://localhost:44322/api/auth/login",
-        {
-          email: email,
-          password: password,
-        }
+        { email, password }
       );
-
-      console.log(response.data);
 
       if (response.data.success) {
         dispatch(
@@ -30,43 +31,62 @@ export default function Login() {
             userId: response.data.userId,
           })
         );
+      } else {
+        setError("Invalid credentials");
       }
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <>
-      <div className="h-screen w-screen flex items-center justify-center ">
-        <div className="w-[30%] h-[65%] border-2 border-black rounded flex flex-col justify-start items-center">
-          <h1 className="text-2xl font-bold border-b-2 border-black">Log In</h1>
+    <div className="h-screen w-screen flex items-center justify-center bg-gray-100">
+      <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
+        <h1 className="text-3xl font-bold text-center mb-6">Log In</h1>
 
-          <div className="w-[80%] h-70 flex flex-col gap-6 justify-center items-center">
-            <div className="w-[80%] h-20 flex flex-col justify-center items-center">
-              <h2>Email :</h2>
-              <input
-                type="email"
-                placeholder="Email...."
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              ></input>
-            </div>
-            <div className="w-[80%] h-20 flex flex-col justify-center items-center">
-              <h2>Password :</h2>
-              <input
-                type="password"
-                placeholder="Password...."
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              ></input>
-            </div>
-            <div className="w-[80%] h-10 flex justify-center items-center">
-              <button onClick={handleLogin}>Log In</button>
-            </div>
+        {error && (
+          <div className="mb-4 text-red-600 font-medium text-center">
+            {error}
           </div>
-        </div>
+        )}
+
+        <form className="flex flex-col gap-4" onSubmit={handleLogin}>
+          <div className="flex flex-col">
+            <label className="mb-1 font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="mb-1 font-medium text-gray-700">Password</label>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+          >
+            {loading ? "Logging in..." : "Log In"}
+          </button>
+        </form>
       </div>
-    </>
+    </div>
   );
 }

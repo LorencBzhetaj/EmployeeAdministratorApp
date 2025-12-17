@@ -19,7 +19,6 @@ export default function UserProfile() {
       const { data } = await axios.get(
         `https://localhost:44322/api/auth/get-user-profile/${userId}`
       );
-
       const u = data.user ?? data;
       setUser(u);
       setFullName(u.fullName ?? "");
@@ -38,7 +37,6 @@ export default function UserProfile() {
 
   const handleSave = async () => {
     setSaving(true);
-
     const formData = new FormData();
     formData.append("userId", userId);
     formData.append("fullName", fullName);
@@ -49,29 +47,28 @@ export default function UserProfile() {
         `https://localhost:44322/api/auth/edit-user`,
         formData
       );
-
-      console.log(data);
-
       setUser(data.user ?? data);
       setPhoto(null);
+      setPreview(null);
     } catch (err) {
-      console.error("AxiosError:", err);
+      console.error("Error saving profile:", err);
     } finally {
       setSaving(false);
     }
   };
 
   if (!user) {
-    return <div className="p-8">Loading...</div>;
+    return (
+      <div className="p-8 text-center text-gray-500">Loading profile...</div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8 flex justify-center">
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Profile Overview</h2>
-
-          <div className="flex items-center gap-4 mb-4">
+    <div className="min-h-screen bg-gray-50 p-6 flex justify-center">
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Profile Overview */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center md:items-start">
+          <div className="flex flex-col items-center md:items-start gap-4">
             <img
               src={
                 preview ||
@@ -80,54 +77,67 @@ export default function UserProfile() {
                   : "/avatar.png")
               }
               alt="Profile"
-              className="w-20 h-20 rounded-full object-cover border"
+              className="w-24 h-24 rounded-full border-2 border-gray-300 object-cover"
             />
-            <div>
-              <div className="font-semibold">{user.fullName ?? "N/A"}</div>
-              <div className="text-sm text-gray-500">{user.email}</div>
-              <div className="text-xs text-gray-400">Role: {role}</div>
+            <div className="text-center md:text-left">
+              <h2 className="text-xl font-semibold text-gray-800">
+                {user.fullName ?? "N/A"}
+              </h2>
+              <p className="text-gray-500">{user.email}</p>
+              <p className="text-sm text-gray-400 mt-1">Role: {role}</p>
             </div>
           </div>
 
-          <div className="space-y-1 text-sm">
+          <div className="mt-6 w-full text-gray-700 space-y-2 text-sm">
             <div>
-              <b>ID:</b> {user.id}
+              <span className="font-medium">ID:</span> {user.id}
             </div>
             <div>
-              <b>Username:</b> {user.userName}
+              <span className="font-medium">Username:</span> {user.userName}
             </div>
             <div>
-              <b>Email Confirmed:</b> {user.emailConfirmed ? "Yes" : "No"}
+              <span className="font-medium">Email Confirmed:</span>{" "}
+              {user.emailConfirmed ? "Yes" : "No"}
             </div>
             <div>
-              <b>Phone:</b> {user.phoneNumber ?? "N/A"}
+              <span className="font-medium">Phone:</span>{" "}
+              {user.phoneNumber ?? "N/A"}
             </div>
             <div>
-              <b>2FA:</b> {user.twoFactorEnabled ? "Enabled" : "Disabled"}
+              <span className="font-medium">2FA:</span>{" "}
+              {user.twoFactorEnabled ? "Enabled" : "Disabled"}
             </div>
             <div>
-              <b>Lockout:</b> {user.lockoutEnabled ? "Enabled" : "Disabled"}
+              <span className="font-medium">Lockout:</span>{" "}
+              {user.lockoutEnabled ? "Enabled" : "Disabled"}
             </div>
             <div>
-              <b>Failed Count:</b> {user.accessFailedCount}
+              <span className="font-medium">Failed Count:</span>{" "}
+              {user.accessFailedCount}
             </div>
           </div>
         </div>
-        <div className="w-full bg-white rounded-xl shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Edit Profile</h2>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Full Name</label>
+        {/* Edit Profile */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-4">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            Edit Profile
+          </h2>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Full Name
+            </label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring"
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Profile Photo
             </label>
             <input
@@ -139,11 +149,11 @@ export default function UserProfile() {
           </div>
 
           {preview && (
-            <div className="mb-4">
+            <div className="flex justify-center mb-2">
               <img
                 src={preview}
                 alt="Preview"
-                className="w-24 h-24 rounded-full object-cover border"
+                className="w-28 h-28 rounded-full border-2 border-gray-300 object-cover"
               />
             </div>
           )}
@@ -151,7 +161,7 @@ export default function UserProfile() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg shadow hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>

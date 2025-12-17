@@ -22,6 +22,29 @@ export default function UserList() {
     fetchUsers();
   }, []);
 
+  const handleDelete = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+
+    try {
+      const response = await fetch(
+        `https://localhost:44322/api/Auth/delete-user/${userId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete user");
+      }
+
+      setUsers((prevUsers) => prevUsers.filter((u) => u.user.id !== userId));
+
+      console.log("User deleted:", userId);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
+
   if (loading) return <p>Loading users...</p>;
   if (users.length === 0) return <p>No users found.</p>;
 
@@ -53,7 +76,7 @@ export default function UserList() {
                 </button>
                 <button
                   className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                  onClick={() => console.log("Delete user:", user.id)}
+                  onClick={() => handleDelete(user.id)}
                 >
                   Delete
                 </button>

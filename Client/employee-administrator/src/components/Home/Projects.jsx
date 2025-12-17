@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 
 export default function Projects({ setSelectedProject }) {
   const [projects, setProjects] = useState([]);
+  const userRole = useSelector((state) => state.auth.userRole);
 
   const userId = useSelector((state) => state.auth.userId);
 
@@ -13,16 +14,18 @@ export default function Projects({ setSelectedProject }) {
       );
       const data = await response.json();
 
-      const filteredProjects = projects.filter((p) =>
-        p.assignedUserIds?.includes(userId)
-      );
+      if (userRole != "Admin") {
+        const filteredProjects = data.projects.filter((p) =>
+          p.assignedUserIds?.includes(userId)
+        );
 
-      setProjects(filteredProjects);
+        setProjects(filteredProjects);
+      } else {
+        setProjects(data.projects);
+      }
     };
 
     fetchProjects();
-
-    console.log(projects);
   }, []);
 
   const handleProjectClick = (projectid) => {
