@@ -59,13 +59,15 @@ export default function UserProfile() {
           },
         }
       );
+
+      console.log(data);
       const u = data.user ?? data;
       setUser(u);
       setUserName(u.userName);
       setEmail(u.email);
       setPassword(u.password);
       setPhoneNumber(u.phoneNumber);
-      setFullName(u.fullName ?? "");
+      setFullName(data.fullName);
     };
 
     fetchUser();
@@ -87,7 +89,13 @@ export default function UserProfile() {
     formData.append("userName", username);
     formData.append("email", email);
     formData.append("phoneNumber", phoneNumber);
-    formData.append("password", password ?? null);
+    if (password == undefined) {
+      formData.append("password", null);
+    } else {
+      formData.append("password", password);
+    }
+
+    console.log(password);
     if (photo) formData.append("photo", photo);
 
     try {
@@ -129,7 +137,7 @@ export default function UserProfile() {
             />
             <div className="text-center md:text-left">
               <h2 className="text-xl font-semibold text-gray-800">
-                {user.fullName ?? "N/A"}
+                {fullName ?? "N/A"}
               </h2>
               <p className="text-gray-500">{user.email}</p>
               <p className="text-sm text-gray-400 mt-1">Role: {role}</p>

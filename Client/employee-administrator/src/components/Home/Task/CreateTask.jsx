@@ -2,11 +2,12 @@ import { useState } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 
-export default function CreateTask({ selectedProject, onCreate }) {
+export default function CreateTask({ selectedProject, onCreate, closeModal }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [assignedUserIds, setAssignedUserIds] = useState([""]);
+  const userId = useSelector((state) => state.auth.userId);
+  const [assignedUserIds, setAssignedUserIds] = useState([userId]);
   const token = useSelector((state) => state.auth.token);
 
   const addAssignedUser = () => setAssignedUserIds([...assignedUserIds, ""]);
@@ -113,6 +114,7 @@ export default function CreateTask({ selectedProject, onCreate }) {
         >
           Create Task
         </button>
+        <button onClick={closeModal}>Close</button>
       </form>
     </div>
   );

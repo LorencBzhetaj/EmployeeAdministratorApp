@@ -12,6 +12,63 @@ export default function ProjectList() {
   const [newTask, setNewTask] = useState("");
   const [taskProjectId, setTaskProjectId] = useState(null);
 
+  //Edit Project State
+  const [projectName, setProjectName] = useState("");
+  const [description, setDescription] = useState("");
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [dueDate, setDueDate] = useState("");
+  const [assignedUserIds, setAssignedUserIds] = useState([]);
+  const [projectTasks, setProjectTasks] = useState([]);
+
+  //Edit Project Function
+  useEffect(() => {
+    if (selectedProject) {
+      setProjectName(selectedProject.name ?? "");
+      setDescription(selectedProject.description ?? "");
+      setIsCompleted(!!selectedProject.isCompleted);
+      setDueDate(
+        selectedProject.dueDate ? selectedProject.dueDate.split("T")[0] : ""
+      );
+      setAssignedUserIds(selectedProject.assignedUserIds ?? []);
+      setProjectTasks(selectedProject.projectTasks ?? []);
+    }
+  }, [selectedProject]);
+
+  const handleEditProject = async () => {
+    const payload = {
+      id: selectedProject.id,
+      name: projectName,
+      description,
+      isCompleted,
+      dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+      assignedUserIds,
+      projectTasks,
+    };
+
+    try {
+      const response = await fetch(
+        "https://localhost:44322/api/project/edit-project",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to save project");
+
+      const updatedProject = await response.json();
+      console.log("Project updated:", updatedProject);
+
+      handleProjectModalClose();
+    } catch (err) {
+      console.error("Error saving project:", err);
+    }
+  };
+
   const userId = useSelector((state) => state.auth.userId);
   const userRole = useSelector((state) => state.auth.userRole);
   const token = useSelector((state) => state.auth.token);
@@ -247,19 +304,96 @@ export default function ProjectList() {
       </div>
 
       {isProjectModalOpen && selectedProject && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-96 shadow-lg">
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4">Edit Project</h2>
+            <div className="mb-3">
+              <label className="block text-sm font-medium mb-1">Name</label>
+              <input
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            <div className="mb-3">
+              <label className="block text-sm font-medium mb-1">
+                Description
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full border rounded px-3 py-2"
+                rows={3}
+              />
+            </div>
+            <div className="mb-3">
+              <label className="block text-sm font-medium mb-1">Due Date</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            <div className="mb-3 flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isCompleted}
+                onChange={(e) => setIsCompleted(e.target.checked)}
+              />
+              <label className="text-sm font-medium">Completed</label>
+            </div>
+            <div className="mb-3">
+              <label className="block text-sm font-medium mb-1">
+                Assigned Users (IDs)
+              </label>
+              <input
+                type="text"
+                value={assignedUserIds.join(",")}
+                onChange={(e) =>
+                  setAssignedUserIds(
+                    e.target.value
+                      .split(",")
+                      .map((id) => id.trim())
+                      .filter(Boolean)
+                  )
+                }
+                placeholder="user1,user2,user3"
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                Project Tasks
+              </label>
+              <textarea
+                value={projectTasks.join("\n")}
+                onChange={(e) =>
+                  setProjectTasks(
+                    e.target.value
+                      .split("\n")
+                      .map((t) => t.trim())
+                      .filter(Boolean)
+                  )
+                }
+                placeholder="One task per line"
+                className="w-full border rounded px-3 py-2"
+                rows={4}
+              />
+            </div>
             <div className="flex justify-end gap-2 mt-4">
               <button
+                type="button"
                 onClick={handleProjectModalClose}
-                className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
               >
                 Cancel
               </button>
               <button
-                onClick={handleSaveProject}
-                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                type="button"
+                onClick={handleEditProject}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 Save
               </button>
@@ -267,8 +401,12 @@ export default function ProjectList() {
           </div>
         </div>
       )}
+
       {isTaskModalOpen && (
-        <CreateTask selectedProject={taskProjectId}></CreateTask>
+        <CreateTask
+          selectedProject={taskProjectId}
+          closeModal={handleTaskModalClose}
+        ></CreateTask>
       )}
     </>
   );
