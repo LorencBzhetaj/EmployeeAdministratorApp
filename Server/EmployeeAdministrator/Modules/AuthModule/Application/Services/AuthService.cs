@@ -225,5 +225,13 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
                 };
             }
         }
+
+        public async Task<(byte[] photo, string photoType)> GetUserPhoto(string userId)
+        {
+            var photo = await _authRepository.GetUserPhoto(userId);
+            var photoType = await _authRepository.GetUserPhotoType(userId);
+
+            return (photo, photoType);
+        }
     }
 }

@@ -115,5 +115,17 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpGet("users/{id}/photo")]
+        [Authorize(Roles = "Admin,Employee")]
+        public async Task<IActionResult> GetUserPhoto(string id)
+        {
+            var (photo, photoType) = await _authService.GetUserPhoto(id);
+
+            if (photo == null || string.IsNullOrEmpty(photoType))
+                return NotFound();
+
+            return File(photo, photoType);
+        }
     }
 }

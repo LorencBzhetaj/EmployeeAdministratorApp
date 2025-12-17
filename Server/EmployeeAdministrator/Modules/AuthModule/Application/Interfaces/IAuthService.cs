@@ -19,6 +19,6 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Interfaces
 
         public Task<DeleteUserResponse> DeleteUser(string userId);
 
-
+        Task<(byte[] photo, string photoType)> GetUserPhoto(string userId);
     }
 }

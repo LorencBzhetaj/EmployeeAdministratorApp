@@ -8,7 +8,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.DTOs
 
         public string Message { get; set; }
         public IdentityUser User { get; set; }
-
         public List<string> UserRoles { get; set; }
+
     }
 }

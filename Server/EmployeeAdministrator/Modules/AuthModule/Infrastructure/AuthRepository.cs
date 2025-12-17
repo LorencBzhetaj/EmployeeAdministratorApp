@@ -107,63 +107,94 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
         {
             try
             {
-
-                var user = await _dbContext.Customers.FirstOrDefaultAsync(u=>u.UserId==request.userId);
-
-                if(user == null)
+                var user = await _userManager.FindByIdAsync(request.userId);
+                if (user == null)
                 {
-                    var customer = new Customer
+                    return new EditUserResponse
+                    {
+                        Success = false,
+                        Message = "User not found."
+                    };
+                }
+                if (!string.IsNullOrEmpty(request.UserName))
+                    user.UserName = request.UserName;
+
+                if (!string.IsNullOrEmpty(request.Email))
+                    user.Email = request.Email;
+
+                if (!string.IsNullOrEmpty(request.PhoneNumber))
+                    user.PhoneNumber = request.PhoneNumber;
+
+                if (!string.IsNullOrEmpty(request.Password))
+                {
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    var result = await _userManager.ResetPasswordAsync(user, token, request.Password);
+                    if (!result.Succeeded)
+                    {
+                        return new EditUserResponse
+                        {
+                            Success = false,
+                            Message = "Failed to update password: " + string.Join(", ", result.Errors.Select(e => e.Description))
+                        };
+                    }
+                }
+                var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == request.userId);
+                if (customer == null)
+                {
+                    customer = new Customer
                     {
                         UserId = request.userId,
-                        FullName = request.FullName
+                        FullName = request.FullName ?? user.UserName
                     };
 
-                        if (request.Photo != null && request.Photo.Length > 0)
+                    if (request.Photo != null && request.Photo.Length > 0)
                     {
                         using var ms = new MemoryStream();
                         await request.Photo.CopyToAsync(ms);
-
                         customer.Photo = ms.ToArray();
-                        customer.PhotoContentType = request.Photo.ContentType;  
+                        customer.PhotoContentType = request.Photo.ContentType;
                     }
 
-                   _dbContext.Customers.Add(customer);
-                    await _dbContext.SaveChangesAsync();
+                    _dbContext.Customers.Add(customer);
+                }
+                else
+                {
+     
+                    customer.FullName = request.FullName ?? customer.FullName;
 
+                    if (request.Photo != null && request.Photo.Length > 0)
+                    {
+                        using var ms = new MemoryStream();
+                        await request.Photo.CopyToAsync(ms);
+                        customer.Photo = ms.ToArray();
+                        customer.PhotoContentType = request.Photo.ContentType;
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync();
+                var updateResult = await _userManager.UpdateAsync(user);
+                if (!updateResult.Succeeded)
+                {
                     return new EditUserResponse
                     {
-                        Success = true,
-                        Message = "User Updated Successfully"
+                        Success = false,
+                        Message = "Failed to update user: " + string.Join(", ", updateResult.Errors.Select(e => e.Description))
                     };
                 }
-
-                user.FullName = request.FullName;
-
-                if (request.Photo != null && request.Photo.Length > 0)
-                {
-                    using var ms = new MemoryStream();
-                    await request.Photo.CopyToAsync(ms);
-
-                    user.Photo = ms.ToArray();
-                    user.PhotoContentType = request.Photo.ContentType;
-                }
-                await _dbContext.SaveChangesAsync();
 
                 return new EditUserResponse
                 {
                     Success = true,
-                    Message = "User Created Successfully"
+                    Message = "User updated successfully."
                 };
-
             }
-            catch ( Exception ex )
+            catch (Exception ex)
             {
                 return new EditUserResponse
                 {
                     Success = false,
-                    Message = "Repository Error:" + ex.Message
+                    Message = "Repository Error: " + ex.Message
                 };
-
             }
         }
 
@@ -208,6 +239,18 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
                     Message = "Repository Error : "+ ex.Message,
                 };
             }
+        }
+
+        public async Task<byte[]> GetUserPhoto(string userId)
+        {
+            var user = await _dbContext.Customers.FirstOrDefaultAsync(x => x.UserId == userId);
+            return user?.Photo;
+        }
+
+        public async Task<string> GetUserPhotoType(string userId)
+        {
+            var user = await _dbContext.Customers.FirstOrDefaultAsync(x => x.UserId == userId);
+            return user?.PhotoContentType;
         }
     }
 }

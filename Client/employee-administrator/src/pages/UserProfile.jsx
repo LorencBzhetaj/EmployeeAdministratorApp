@@ -13,6 +13,34 @@ export default function UserProfile() {
   const [preview, setPreview] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  const [photoUrl, setPhotoUrl] = useState(null);
+
+  useEffect(() => {
+    if (!userId || !token) return;
+    const fetchPhoto = async () => {
+      try {
+        const response = await axios.get(
+          `https://localhost:44322/api/auth/users/${userId}/photo`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            responseType: "blob",
+          }
+        );
+        const blobUrl = URL.createObjectURL(response.data);
+        setPhotoUrl(blobUrl);
+      } catch (err) {
+        console.error("Error fetching photo:", err);
+      }
+    };
+
+    fetchPhoto();
+    return () => {
+      if (photoUrl) URL.revokeObjectURL(photoUrl);
+    };
+  }, [userId, token]);
+
   useEffect(() => {
     if (!userId) return;
 
@@ -80,12 +108,7 @@ export default function UserProfile() {
         <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center md:items-start">
           <div className="flex flex-col items-center md:items-start gap-4">
             <img
-              src={
-                preview ||
-                (user.photoBase64
-                  ? `data:image/jpeg;base64,${user.photoBase64}`
-                  : "/avatar.png")
-              }
+              src={photoUrl || "/avatar.png"}
               alt="Profile"
               className="w-24 h-24 rounded-full border-2 border-gray-300 object-cover"
             />

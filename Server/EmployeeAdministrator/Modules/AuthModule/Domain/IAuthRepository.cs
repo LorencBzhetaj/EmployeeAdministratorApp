@@ -11,5 +11,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Domain
         Task<EditUserResponse> EditUser(EditUserRequest request);
 
         Task<DeleteUserResponse> DeleteUser(string userId);
+        Task<byte[]> GetUserPhoto(string userId);
+        Task<string> GetUserPhotoType(string userId);
     }
 }
