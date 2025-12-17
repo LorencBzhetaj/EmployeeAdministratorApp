@@ -8,7 +8,13 @@ export default function UserProfile() {
   const token = useSelector((state) => state.auth.token);
 
   const [user, setUser] = useState(null);
+
   const [fullName, setFullName] = useState("");
+  const [username, setUserName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -55,6 +61,10 @@ export default function UserProfile() {
       );
       const u = data.user ?? data;
       setUser(u);
+      setUserName(u.userName);
+      setEmail(u.email);
+      setPassword(u.password);
+      setPhoneNumber(u.phoneNumber);
       setFullName(u.fullName ?? "");
     };
 
@@ -74,6 +84,10 @@ export default function UserProfile() {
     const formData = new FormData();
     formData.append("userId", userId);
     formData.append("fullName", fullName);
+    formData.append("userName", username);
+    formData.append("email", email);
+    formData.append("phoneNumber", phoneNumber);
+    formData.append("password", password ?? null);
     if (photo) formData.append("photo", photo);
 
     try {
@@ -86,7 +100,8 @@ export default function UserProfile() {
           },
         }
       );
-      setUser(data.user ?? data);
+
+      console.log(data);
       setPhoto(null);
       setPreview(null);
     } catch (err) {
@@ -164,6 +179,45 @@ export default function UserProfile() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Username
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUserName(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
             />
           </div>
 
@@ -176,6 +230,7 @@ export default function UserProfile() {
               accept="image/*"
               onChange={handlePhotoChange}
               className="w-full"
+              required
             />
           </div>
 
