@@ -52,7 +52,7 @@ export default function ProjectManager() {
     };
 
     var response = await axios.post(
-      "https://localhost:44322/api/project/create-project",
+      "http://localhost:5000/api/project/create-project",
       payload,
       {
         headers: {

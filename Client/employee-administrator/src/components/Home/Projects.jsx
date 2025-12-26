@@ -10,7 +10,7 @@ export default function Projects({ setSelectedProject }) {
   useEffect(() => {
     const fetchProjects = async () => {
       const response = await fetch(
-        "https://localhost:44322/api/project/get-projects",
+        "http://localhost:5000/api/project/get-projects",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -24,9 +24,13 @@ export default function Projects({ setSelectedProject }) {
           p.assignedUserIds?.includes(userId)
         );
 
-        setProjects(filteredProjects);
+        if (filteredProjects.length === 0 && data.projects.length > 0) {
+          setProjects(data.projects[0].id);
+        }
       } else {
-        setProjects(data.projects);
+        if (data.projects.length > 0) {
+          setProjects(data.projects);
+        }
       }
     };
 

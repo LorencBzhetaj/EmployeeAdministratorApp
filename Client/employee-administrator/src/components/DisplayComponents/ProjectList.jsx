@@ -47,7 +47,7 @@ export default function ProjectList() {
 
     try {
       const response = await fetch(
-        "https://localhost:44322/api/project/edit-project",
+        "http://localhost:5000/api/project/edit-project",
         {
           method: "POST",
           headers: {
@@ -77,7 +77,7 @@ export default function ProjectList() {
     const fetchTasks = async () => {
       try {
         const response = await axios.get(
-          "https://localhost:44322/api/task/get-tasks",
+          "http://localhost:5000/api/task/get-tasks",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -99,7 +99,7 @@ export default function ProjectList() {
   useEffect(() => {
     const fetchProjects = async () => {
       const response = await fetch(
-        "https://localhost:44322/api/project/get-projects",
+        "http://localhost:5000/api/project/get-projects",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -126,7 +126,7 @@ export default function ProjectList() {
     try {
       const project = projects[index];
       const response = await fetch(
-        `https://localhost:44322/api/project/delete-project/${project.id}`,
+        `http://localhost:5000/api/project/delete-project/${project.id}`,
         {
           method: "DELETE",
           headers: {
@@ -160,7 +160,7 @@ export default function ProjectList() {
       };
 
       const response = await fetch(
-        `https://localhost:44322/api/project/edit-project`,
+        `http://localhost:5000/api/project/edit-project`,
         {
           method: "POST",
           headers: {
@@ -205,7 +205,7 @@ export default function ProjectList() {
       const updatedTasks = [...project.projectTasks, newTask];
 
       const response = await fetch(
-        `https://localhost:44322/api/project/edit-project`,
+        `http://localhost:5000/api/project/edit-project`,
         {
           method: "POST",
           headers: {

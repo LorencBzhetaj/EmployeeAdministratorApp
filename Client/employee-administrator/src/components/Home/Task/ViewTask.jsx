@@ -22,7 +22,7 @@ export default function ViewTask({ closeModal, task, setIsViewingTask }) {
 
     try {
       const response = await axios.post(
-        "https://localhost:44322/api/Task/edit-task",
+        "http://localhost:5000/api/Task/edit-task",
         updatedTask,
         {
           headers: {

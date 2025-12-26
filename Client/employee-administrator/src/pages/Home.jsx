@@ -19,7 +19,7 @@ export default function Home() {
     const fetchTasks = async () => {
       try {
         const response = await axios.get(
-          "https://localhost:44322/api/task/get-tasks",
+          "http://localhost:5000/api/task/get-tasks",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -28,8 +28,6 @@ export default function Home() {
         );
 
         let tasksData = response.data.tasks;
-
-        console.log(tasksData);
 
         if (userRole !== "Admin") {
           tasksData = tasksData.filter((task) =>

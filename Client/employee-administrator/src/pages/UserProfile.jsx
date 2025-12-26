@@ -25,8 +25,9 @@ export default function UserProfile() {
     if (!userId || !token) return;
     const fetchPhoto = async () => {
       try {
+        console.log("Fetching photo for userId:", userId);
         const response = await axios.get(
-          `https://localhost:44322/api/auth/users/${userId}/photo`,
+          `http://localhost:5000/api/auth/users/${userId}/photo`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -52,7 +53,7 @@ export default function UserProfile() {
 
     const fetchUser = async () => {
       const { data } = await axios.get(
-        `https://localhost:44322/api/auth/get-user-profile/${userId}`,
+        `http://localhost:5000/api/auth/get-user-profile/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -100,7 +101,7 @@ export default function UserProfile() {
 
     try {
       const { data } = await axios.post(
-        `https://localhost:44322/api/auth/edit-user`,
+        `http://localhost:5000/api/auth/edit-user`,
         formData,
         {
           headers: {

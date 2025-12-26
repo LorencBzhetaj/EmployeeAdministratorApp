@@ -13,7 +13,7 @@ export default function UserList() {
     async function fetchUsers() {
       try {
         const response = await fetch(
-          "https://localhost:44322/api/Auth/get-users",
+          "http://localhost:5000/api/Auth/get-users",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -44,7 +44,7 @@ export default function UserList() {
 
     try {
       const response = await fetch(
-        `https://localhost:44322/api/Auth/delete-user/${userId}`,
+        `http://localhost:5000/api/Auth/delete-user/${userId}`,
         {
           method: "DELETE",
           headers: {
@@ -156,7 +156,7 @@ function EditUserForm({ user, token, onCancel, onSaved }) {
 
     try {
       const response = await axios.post(
-        "https://localhost:44322/api/Auth/edit-user",
+        "http://localhost:5000/api/Auth/edit-user",
         formData,
         {
           headers: {

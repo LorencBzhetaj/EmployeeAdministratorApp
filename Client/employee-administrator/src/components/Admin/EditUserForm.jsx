@@ -17,16 +17,13 @@ export default function EditUserForm({ user, token, onCancel, onSaved }) {
     if (password.trim()) formData.append("password", password);
 
     try {
-      const response = await fetch(
-        "https://localhost:44322/api/Auth/edit-user",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
+      const response = await fetch("http://localhost:5000/api/Auth/edit-user", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
       if (!response.ok) {
         throw new Error("Failed to update user");

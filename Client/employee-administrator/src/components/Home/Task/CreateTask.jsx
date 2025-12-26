@@ -33,7 +33,7 @@ export default function CreateTask({ selectedProject, onCreate, closeModal }) {
     console.log("New Task:", newTask);
 
     var response = await axios.post(
-      "https://localhost:44322/api/task/create-task",
+      "http://localhost:5000/api/task/create-task",
       newTask,
       {
         headers: {

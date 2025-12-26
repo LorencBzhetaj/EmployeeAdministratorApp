@@ -33,7 +33,7 @@ export default function UserManager() {
     };
 
     var response = await axios.post(
-      "https://localhost:44322/api/Auth/create-user",
+      "http://localhost:5000/api/Auth/create-user",
       payload,
       {
         headers: {
