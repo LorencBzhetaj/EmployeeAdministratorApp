@@ -1,14 +1,28 @@
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 
 export default function Projects({ setSelectedProject }) {
   const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const userRole = useSelector((state) => state.auth.userRole);
   const userId = useSelector((state) => state.auth.userId);
   const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
+    console.log("AUTH STATE CHECK");
+    console.log("token:", token);
+    console.log("userId:", userId, typeof userId);
+    console.log("userRole:", userRole);
+
+    if (!token || userId == null || !userRole) {
+      console.log("Auth not ready yet — waiting");
+      return;
+    }
+
     const fetchProjects = async () => {
+      console.log("Fetching projects...");
+
       const response = await fetch(
         "http://localhost:5000/api/project/get-projects",
         {
@@ -17,46 +31,51 @@ export default function Projects({ setSelectedProject }) {
           },
         }
       );
+
       const data = await response.json();
 
-      if (userRole != "Admin") {
-        const filteredProjects = data.projects.filter((p) =>
-          p.assignedUserIds?.includes(userId)
-        );
+      let result = [];
 
-        if (filteredProjects.length === 0 && data.projects.length > 0) {
-          setProjects(data.projects[0].id);
-        }
+      if (String(userRole).toLowerCase() !== "Admin") {
+        result = data.projects.filter((p) =>
+          p.assignedUserIds?.some((id) => String(id) === String(userId))
+        );
       } else {
-        if (data.projects.length > 0) {
-          setProjects(data.projects);
-        }
+        result = data.projects;
       }
+
+      setProjects(result);
+      setLoading(false);
     };
 
     fetchProjects();
-  }, []);
+  }, [token, userId, userRole]);
 
-  const handleProjectClick = (projectid) => {
-    setSelectedProject(projectid);
+  const handleProjectClick = (projectId) => {
+    setSelectedProject(projectId);
   };
 
   return (
-    <>
-      <div className="h-150 w-1/2 flex flex-col items-center justify-start gap-4">
-        <h1 className="text-3xl font-bold">Projects</h1>
+    <div className="h-150 w-1/2 flex flex-col items-center justify-start gap-4">
+      <h1 className="text-3xl font-bold">Projects</h1>
 
-        {projects.map((project) => (
+      {loading && <p className="text-gray-500 mt-4">Loading projects...</p>}
+
+      {!loading && projects.length === 0 && (
+        <p className="text-gray-500 mt-4">No projects available.</p>
+      )}
+
+      {!loading &&
+        projects.map((project) => (
           <div
             key={project.id}
-            className="bg-white p-4 rounded-lg shadow w-5/6 flex flex-col justify-center items-center"
+            className="bg-white p-4 rounded-lg shadow w-5/6 flex flex-col justify-center items-center cursor-pointer hover:shadow-md transition"
             onClick={() => handleProjectClick(project.id)}
           >
-            <h2 className="text-xl font-semibold">{project.title}</h2>
+            <h2 className="text-xl font-semibold">{project.name}</h2>
             <p className="text-gray-600">{project.description}</p>
           </div>
         ))}
-      </div>
-    </>
+    </div>
   );
 }

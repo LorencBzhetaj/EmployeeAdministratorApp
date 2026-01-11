@@ -60,8 +60,6 @@ export default function UserProfile() {
           },
         }
       );
-
-      console.log(data);
       const u = data.user ?? data;
       setUser(u);
       setUserName(u.userName);

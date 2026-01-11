@@ -1,10 +1,5 @@
-// API Configuration
-// This file centralizes API endpoint configuration
-// For Docker/production, set VITE_API_URL environment variable
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-// Remove trailing slash if present
 const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
 
 export const API_ENDPOINTS = {
