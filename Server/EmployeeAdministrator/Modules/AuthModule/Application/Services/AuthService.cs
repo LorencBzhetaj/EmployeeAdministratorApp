@@ -1,6 +1,7 @@
 ﻿using EmployeeAdministrator.Modules.AuthModule.Application.Interfaces;
 using EmployeeAdministrator.Modules.AuthModule.Domain;
 using EmployeeAdministrator.Modules.AuthModule.DTOs;
+using EmployeeAdministrator.Modules.AuthModule.DTOs.Photo_DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -31,6 +32,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
                 {
                     UserName = createUserRequest.UserName,
                     Email = createUserRequest.Email,
+                    PhoneNumber = createUserRequest.PhoneNumber,
                 };
 
                 var result = await _userManager.CreateAsync(newUser, createUserRequest.Password);
@@ -40,9 +42,19 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
                     return new CreateUserResponse
                     {
                         IsSuccess = false,
-                        Message = "Failed To Create User!"
+                        Message = result.Errors.ToString()
                     };
                 }
+
+                var user =await _userManager.FindByEmailAsync(createUserRequest.Email);
+
+                var createCustomerRequest = new CreateCustomerRequest
+                {
+                    UserId = user.Id,
+                    FullName = createUserRequest.FullName
+                };
+
+                var createCustomer = await _authRepository.CreateCustomer(createCustomerRequest);
 
                 if (await _roleManager.RoleExistsAsync("Employee"))
                 {
@@ -57,6 +69,8 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
                             Message = "Failed To Add Role To The User!"
                         };
                     }
+                    
+                    
                 }
                 else
                 {
@@ -226,12 +240,32 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Services
             }
         }
 
-        public async Task<(byte[] photo, string photoType)> GetUserPhoto(string userId)
+        public async Task<GetUserPhotoResponse> GetUserPhoto(string userId)
         {
             var photo = await _authRepository.GetUserPhoto(userId);
             var photoType = await _authRepository.GetUserPhotoType(userId);
 
-            return (photo, photoType);
+            if(photoType != null && photo != null)
+            {
+                return new GetUserPhotoResponse
+                {
+                    Success = true,
+                    Message = "Photo Returned Successfully!",
+                    Photo = photo,
+                    PhotoType = photoType
+                };
+            }
+
+            return new GetUserPhotoResponse
+            {
+                Success = false,
+                Message = "This User Has No Photo Saved !",
+            };
+        }
+
+        public  async Task<UploadPhotoResponse> UploadPhoto(string userId, IFormFile photo)
+        {
+            return await _authRepository.UploadPhoto(userId, photo);
         }
     }
 }

@@ -1,77 +1,47 @@
 import Projects from "../components/Home/Projects";
 import Tasks from "../components/Home/Task/Tasks";
-import { useState, useEffect, use } from "react";
-import axios from "axios";
-import ViewTask from "../components/Home/Task/ViewTask";
-import { useSelector } from "react-redux";
+import { useState } from "react";
+import { motion } from "framer-motion";
 
 export default function Home() {
   const [selectedProject, setSelectedProject] = useState(0);
-  const [tasks, setTasks] = useState([]);
-  const [isViewingTask, setIsViewingTask] = useState();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const userRole = useSelector((state) => state.auth.userRole);
-  const userId = useSelector((state) => state.auth.userId);
-  const token = useSelector((state) => state.auth.token);
-
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:5000/api/task/get-tasks",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        let tasksData = response.data.tasks;
-
-        if (userRole !== "Admin") {
-          tasksData = tasksData.filter((task) =>
-            task.assignedUserIds?.some((id) => id === userId)
-          );
-        }
-
-        setTasks(tasksData);
-        console.log("Filtered tasks:", tasksData);
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-      }
-    };
-
-    fetchTasks();
-  }, [isViewingTask, userRole, userId]);
-
-  const openModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
+  const [projectDueDate, setProjectDueDate] = useState(null);
+  const [projectName, setProjectName] = useState(null);
 
   return (
-    <>
-      <div className="flex-1 flex justify-center items-center">
-        <Projects setSelectedProject={setSelectedProject}></Projects>
-        <Tasks
-          openModal={openModal}
-          selectedProject={selectedProject}
-          tasks={tasks}
-          setIsViewingTask={setIsViewingTask}
-        ></Tasks>
-      </div>
+    <div className="flex-1 p-6 bg-gray-100 min-h-screen">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="bg-white rounded-lg shadow border border-gray-200 p-4"
+        >
+          <h1 className="text-xl font-semibold mb-4 text-gray-800">Projects</h1>
+          <Projects
+            setSelectedProject={setSelectedProject}
+            setProjectDueDate={setProjectDueDate}
+            setProjectName={setProjectName}
+          />
+        </motion.div>
 
-      {isModalOpen && (
-        <ViewTask
-          setIsViewingTask={setIsViewingTask}
-          closeModal={closeModal}
-          task={isViewingTask}
-        ></ViewTask>
-      )}
-    </>
+        <div className="border-t border-gray-300" />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
+          className="bg-white rounded-lg shadow border border-gray-200 p-4"
+        >
+          <h1 className="text-xl font-semibold mb-4 text-gray-800">Tasks</h1>
+          <Tasks
+            selectedProject={selectedProject}
+            setSelectedProject={setSelectedProject}
+            projectDueDate={projectDueDate}
+            projectName={projectName}
+          />
+        </motion.div>
+      </div>
+    </div>
   );
 }

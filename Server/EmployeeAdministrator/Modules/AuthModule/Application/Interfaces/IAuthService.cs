@@ -1,4 +1,5 @@
 ﻿using EmployeeAdministrator.Modules.AuthModule.DTOs;
+using EmployeeAdministrator.Modules.AuthModule.DTOs.Photo_DTOs;
 using Microsoft.AspNetCore.Identity;
 
 namespace EmployeeAdministrator.Modules.AuthModule.Application.Interfaces
@@ -19,6 +20,8 @@ namespace EmployeeAdministrator.Modules.AuthModule.Application.Interfaces
 
         public Task<DeleteUserResponse> DeleteUser(string userId);
 
-        Task<(byte[] photo, string photoType)> GetUserPhoto(string userId);
+        public Task<GetUserPhotoResponse> GetUserPhoto(string userId);
+
+        public Task<UploadPhotoResponse> UploadPhoto(string userId, IFormFile photo); 
     }
 }

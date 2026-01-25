@@ -1,32 +1,29 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+import axios from "axios";
+import { store } from "../store/store";
 
-const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+const api = axios.create({
+  baseURL: "https://localhost:44322/api",
+  timeout: 10000,
+});
 
-export const API_ENDPOINTS = {
-  BASE_URL: baseUrl,
-  AUTH: {
-    LOGIN: `${baseUrl}/api/auth/login`,
-    CREATE_USER: `${baseUrl}/api/Auth/create-user`,
-    GET_USERS: `${baseUrl}/api/Auth/get-users`,
-    GET_USER_PROFILE: (userId) => `${baseUrl}/api/auth/get-user-profile/${userId}`,
-    EDIT_USER: `${baseUrl}/api/Auth/edit-user`,
-    DELETE_USER: (userId) => `${baseUrl}/api/Auth/delete-user/${userId}`,
-    GET_USER_PHOTO: (userId) => `${baseUrl}/api/auth/users/${userId}/photo`,
+api.interceptors.request.use(
+  (config) => {
+    const state = store.getState();
+    const token = state.auth.token;
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    } else {
+      delete config.headers["Content-Type"];
+    }
+
+    return config;
   },
-  PROJECT: {
-    CREATE: `${baseUrl}/api/project/create-project`,
-    GET_ALL: `${baseUrl}/api/project/get-projects`,
-    EDIT: `${baseUrl}/api/project/edit-project`,
-    DELETE: (projectId) => `${baseUrl}/api/project/delete-project/${projectId}`,
-  },
-  TASK: {
-    CREATE: `${baseUrl}/api/task/create-task`,
-    GET_ALL: `${baseUrl}/api/task/get-tasks`,
-    EDIT: `${baseUrl}/api/Task/edit-task`,
-  },
-};
+  (error) => Promise.reject(error)
+);
 
-export default API_ENDPOINTS;
-
-
-
+export default api;

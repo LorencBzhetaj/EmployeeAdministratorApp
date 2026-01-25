@@ -1,203 +1,318 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProjectList from "../DisplayComponents/ProjectList";
-import axios from "axios";
 import { useSelector } from "react-redux";
+import api from "../../config/api";
+import { motion, AnimatePresence } from "framer-motion";
 
 const initialState = {
   name: "",
   description: "",
   isCompleted: false,
   dueDate: "",
-  assignedUserIds: "",
+  assignedUserIds: [],
   projectTasks: "",
 };
 
 export default function ProjectManager() {
   const [form, setForm] = useState(initialState);
-  const [selectedMethod, setSelectedMethod] = useState("");
+  const [activeTab, setActiveTab] = useState("welcome");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [change, setChange] = useState(0);
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
   const token = useSelector((state) => state.auth.token);
 
-  const changeMethod = (method) => {
-    setSelectedMethod(method);
-  };
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const response = await api.get("/auth/get-users");
+        if (response.data.success) setUsers(response.data.users);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        setLoadingUsers(false);
+      }
+    }
+
+    if (token) fetchUsers();
+  }, [token]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-
     setForm((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  const handleArrayChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const handleAddUser = (userId) => {
+    if (!form.assignedUserIds.includes(userId)) {
+      setForm((prev) => ({
+        ...prev,
+        assignedUserIds: [...prev.assignedUserIds, userId],
+      }));
+    }
+  };
+
+  const handleRemoveUser = (userId) => {
+    setForm((prev) => ({
+      ...prev,
+      assignedUserIds: prev.assignedUserIds.filter((id) => id !== userId),
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setErrors({});
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    if (!validateForm()) return;
+
     const payload = {
-      name: form.name,
-      description: form.description,
-      isCompleted: form.isCompleted,
+      ...form,
       dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : null,
-      assignedUserIds: form.assignedUserIds
-        ? form.assignedUserIds.split(",").map((x) => x.trim())
-        : [],
       projectTasks: form.projectTasks
-        ? form.projectTasks.split(",").map((x) => x.trim())
-        : [],
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean),
     };
 
-    var response = await axios.post(
-      "http://localhost:5000/api/project/create-project",
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    try {
+      const response = await api.post("/project/create-project", payload);
 
-    console.log(response.data);
+      if (response.data.success) {
+        setForm(initialState);
+        setChange((prev) => prev + 1);
+        setSuccessMessage(response.data.message);
+        setTimeout(() => setIsAddModalOpen(false), 1000);
+        setTimeout(() => setSuccessMessage(null), 1000);
+      } else {
+        setErrorMessage(response.data.message || "Failed to create project.");
+      }
+    } catch (error) {
+      setErrorMessage(
+        error.response?.data?.message || "Server error while creating project.",
+      );
+    }
   };
 
-  const renderContent = () => {
-    switch (selectedMethod) {
-      case "":
-        return (
-          <>
-            <div className="w-3/4 h-full flex items-center justify-center">
-              <h1>Please select an action from the left side to continue!</h1>
-            </div>
-          </>
-        );
+  const validateForm = () => {
+    const newErrors = {};
 
-      case "add":
-        return (
-          <>
-            <div className="w-3/4 h-full flex items-center justify-center">
-              <form
-                className="w-full max-w-xl p-6 bg-white rounded-lg shadow"
-                onSubmit={handleSubmit}
-              >
-                <h2 className="text-xl font-semibold mb-6">Create Task</h2>
+    if (!form.name || form.name.trim().length < 3) {
+      newErrors.name = "Project name must be at least 3 characters.";
+    }
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded"
-                    required
-                  />
+    if (form.description && form.description.length > 500) {
+      newErrors.description = "Description cannot exceed 500 characters.";
+    }
+
+    if (!form.dueDate) {
+      newErrors.dueDate = "Due date is required.";
+    } else {
+      const selectedDate = new Date(form.dueDate);
+      if (selectedDate <= new Date()) {
+        newErrors.dueDate = "Due date must be in the future.";
+      }
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  return (
+    <div className="flex min-h-screen">
+      <div className="w-60 bg-white shadow-md p-6 flex flex-col gap-4">
+        <h2 className="text-2xl font-bold mb-4">Projects</h2>
+        <button
+          className={`px-4 py-2 rounded font-medium text-left transition-colors ${
+            activeTab === "add"
+              ? "bg-blue-600 text-white"
+              : "hover:bg-blue-100 text-gray-700"
+          }`}
+          onClick={() => setIsAddModalOpen(true)}
+        >
+          Add Project
+        </button>
+        <button
+          className={`px-4 py-2 rounded font-medium text-left transition-colors ${
+            activeTab === "view"
+              ? "bg-blue-600 text-white"
+              : "hover:bg-blue-100 text-gray-700"
+          }`}
+          onClick={() => setActiveTab("view")}
+        >
+          View Projects
+        </button>
+      </div>
+      <div className="flex-1 p-6">
+        <AnimatePresence exitBeforeEnter>
+          {activeTab === "view" && (
+            <motion.div
+              key="project-list"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ProjectList change={change} setChange={setChange} />
+            </motion.div>
+          )}
+
+          {activeTab === "welcome" && (
+            <motion.div
+              key="welcome"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-xl shadow-lg p-6"
+            >
+              <h2 className="text-xl font-semibold mb-4">Welcome!</h2>
+              <p className="text-gray-700">
+                Select an action from the sidebar to manage projects.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setIsAddModalOpen(false)}
+            />
+            <motion.div
+              className="relative z-10 w-full max-w-xl bg-white rounded-xl shadow-xl p-6"
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -50, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-semibold mb-6">Create Project</h2>
+              {successMessage && (
+                <div className="mb-4 rounded bg-green-100 text-green-700 px-4 py-2">
+                  {successMessage}
+                </div>
+              )}
+
+              {errorMessage && (
+                <div className="mb-4 rounded bg-red-100 text-red-700 px-4 py-2">
+                  {errorMessage}
+                </div>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="Project Name"
+                  className="w-full border rounded px-3 py-2"
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-600 mt-1">{errors.name}</p>
+                )}
+
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder="Project Description"
+                  className="w-full border rounded px-3 py-2"
+                />
+                {errors.description && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {errors.description}
+                  </p>
+                )}
+
+                <div>
+                  <label className="block mb-1 font-medium">Assign Users</label>
+                  <select
+                    onChange={(e) => handleAddUser(e.target.value)}
+                    defaultValue=""
+                    className="w-full border rounded px-3 py-2"
+                  >
+                    <option value="" disabled>
+                      Select user
+                    </option>
+                    {users.map(({ user }) => (
+                      <option key={user.id} value={user.id}>
+                        {user.userName} ({user.email})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {form.assignedUserIds.map((id) => {
+                      const u = users.find((x) => x.user.id === id)?.user;
+                      if (!u) return null;
+                      return (
+                        <span
+                          key={id}
+                          className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                        >
+                          {u.userName}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveUser(id)}
+                            className="text-blue-600 hover:text-red-600"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={form.description}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="mb-4 flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="isCompleted"
-                    checked={form.isCompleted}
-                    onChange={handleChange}
-                  />
-                  <label className="text-sm font-medium">Completed</label>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Due Date
-                  </label>
+                <div>
+                  <label className="block mb-1 font-medium">Due Date</label>
                   <input
                     type="datetime-local"
                     name="dueDate"
                     value={form.dueDate}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded"
+                    required
+                    className="w-full border rounded px-3 py-2"
                   />
+                  {errors.dueDate && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.dueDate}
+                    </p>
+                  )}
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Assigned User IDs (comma separated)
-                  </label>
-                  <input
-                    type="text"
-                    name="assignedUserIds"
-                    value={form.assignedUserIds}
-                    onChange={handleArrayChange}
-                    className="w-full px-3 py-2 border rounded"
-                    placeholder="user1,user2,user3"
-                  />
+                <div className="flex justify-end gap-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-4 py-2 bg-gray-300 rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  >
+                    Create Project
+                  </button>
                 </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-1">
-                    Project Tasks (comma separated)
-                  </label>
-                  <input
-                    type="text"
-                    name="projectTasks"
-                    value={form.projectTasks}
-                    onChange={handleArrayChange}
-                    className="w-full px-3 py-2 border rounded"
-                    placeholder="task1,task2"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Save Task
-                </button>
               </form>
-            </div>
-          </>
-        );
-
-      case "view":
-        return (
-          <>
-            <ProjectList></ProjectList>
-          </>
-        );
-    }
-  };
-
-  return (
-    <div className="w-full h-full flex justify-start items-center">
-      <div className="w-1/4 h-full flex flex-col p-5 justify-start items-center gap-4 border-r-2 border-gray-300">
-        <div
-          onClick={() => changeMethod("add")}
-          className="w-full h-10 border-b-2  border-gray-300 flex justify-center items-center"
-        >
-          Add Project
-        </div>
-        <div
-          onClick={() => changeMethod("view")}
-          className="w-full h-10 border-b-2 border-t-2 border-gray-300 flex justify-center items-center"
-        >
-          View Projects
-        </div>
-      </div>
-      {renderContent()}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

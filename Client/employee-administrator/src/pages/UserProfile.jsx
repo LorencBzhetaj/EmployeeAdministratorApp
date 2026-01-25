@@ -1,265 +1,285 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import axios from "axios";
+import api from "../config/api";
+import { motion } from "framer-motion";
 
 export default function UserProfile() {
   const userId = useSelector((state) => state.auth.userId);
   const role = useSelector((state) => state.auth.userRole);
-  const token = useSelector((state) => state.auth.token);
+  const [errors, setErrors] = useState({});
 
-  const [user, setUser] = useState(null);
-
-  const [fullName, setFullName] = useState("");
-  const [username, setUserName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-
-  const [photo, setPhoto] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
+  const [photo, setPhoto] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
 
-  useEffect(() => {
-    if (!userId || !token) return;
-    const fetchPhoto = async () => {
-      try {
-        console.log("Fetching photo for userId:", userId);
-        const response = await axios.get(
-          `http://localhost:5000/api/auth/users/${userId}/photo`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            responseType: "blob",
-          }
-        );
-        const blobUrl = URL.createObjectURL(response.data);
-        setPhotoUrl(blobUrl);
-      } catch (err) {
-        console.error("Error fetching photo:", err);
-      }
-    };
-
-    fetchPhoto();
-    return () => {
-      if (photoUrl) URL.revokeObjectURL(photoUrl);
-    };
-  }, [userId, token]);
+  const [editUser, setEditUser] = useState({
+    userId: "",
+    userName: "",
+    password: "",
+    email: "",
+    phoneNumber: "",
+    fullName: "",
+  });
 
   useEffect(() => {
     if (!userId) return;
 
     const fetchUser = async () => {
-      const { data } = await axios.get(
-        `http://localhost:5000/api/auth/get-user-profile/${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      try {
+        const response = await api.get(`/auth/get-user-profile/${userId}`);
+        if (response.data.success) {
+          setEditUser({
+            userId: response.data.user.id,
+            userName: response.data.user.userName,
+            password: "",
+            email: response.data.user.email,
+            phoneNumber: response.data.user.phoneNumber ?? "",
+            fullName: response.data.customer?.fullName ?? "",
+          });
         }
-      );
-      const u = data.user ?? data;
-      setUser(u);
-      setUserName(u.userName);
-      setEmail(u.email);
-      setPassword(u.password);
-      setPhoneNumber(u.phoneNumber);
-      setFullName(data.fullName);
+        setLoading(false);
+      } catch (err) {
+        console.error("Failed to load profile", err);
+        setLoading(false);
+      }
     };
 
     fetchUser();
   }, [userId]);
 
-  const handlePhotoChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  useEffect(() => {
+    if (!userId) return;
 
-    setPhoto(file);
-    setPreview(URL.createObjectURL(file));
+    const fetchPhoto = async () => {
+      try {
+        const { data } = await api.get(`/auth/users/${userId}/photo`);
+        if (data.success && data.photo) {
+          setPhotoUrl(`data:${data.photoType};base64,${data.photo}`);
+        } else {
+          setPhotoUrl(null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch photo:", err);
+        setPhotoUrl(null);
+      }
+    };
+
+    fetchPhoto();
+  }, [userId]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditUser((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = async () => {
+    if (!validate()) return;
+
     setSaving(true);
-    const formData = new FormData();
-    formData.append("userId", userId);
-    formData.append("fullName", fullName);
-    formData.append("userName", username);
-    formData.append("email", email);
-    formData.append("phoneNumber", phoneNumber);
-    if (password == undefined) {
-      formData.append("password", null);
-    } else {
-      formData.append("password", password);
-    }
-
-    console.log(password);
-    if (photo) formData.append("photo", photo);
-
     try {
-      const { data } = await axios.post(
-        `http://localhost:5000/api/auth/edit-user`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await api.post("/auth/edit-user-employee", {
+        ...editUser,
+        password: editUser.password || null,
+      });
 
-      console.log(data);
-      setPhoto(null);
-      setPreview(null);
+      if (response.data.success) {
+        alert(response.data.message);
+        setEditUser((prev) => ({ ...prev, password: "" }));
+      } else {
+        alert(response.data.message);
+      }
     } catch (err) {
-      console.error("Error saving profile:", err);
+      console.error("Save failed", err);
+      alert("Failed to update profile");
     } finally {
       setSaving(false);
     }
   };
 
-  if (!user) {
+  const uploadPhoto = async () => {
+    if (!photo) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("photo", photo);
+      await api.post(`/auth/uploadPhoto/${userId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Photo uploaded successfully");
+      setPhoto(null);
+      const { data } = await api.get(`/auth/users/${userId}/photo`);
+      if (data.success && data.photo) {
+        setPhotoUrl(`data:${data.photoType};base64,${data.photo}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Upload failed");
+    }
+  };
+
+  const validate = () => {
+    const newErrors = {};
+
+    if (editUser.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editUser.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (editUser.password && editUser.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (
+      editUser.phoneNumber &&
+      !/^\+?[0-9]{7,15}$/.test(editUser.phoneNumber)
+    ) {
+      newErrors.phoneNumber = "Invalid phone number";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  if (loading) {
     return (
       <div className="p-8 text-center text-gray-500">Loading profile...</div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 flex justify-center">
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center md:items-start">
-          <div className="flex flex-col items-center md:items-start gap-4">
-            <img
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 to-blue-400 p-6 flex justify-center items-start">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6"
+      >
+        <motion.div
+          initial={{ x: -50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="bg-white rounded-2xl shadow-2xl p-6 flex flex-col items-center gap-6"
+        >
+          <div className="flex flex-col items-center gap-4">
+            <motion.img
               src={photoUrl || "/avatar.png"}
               alt="Profile"
-              className="w-24 h-24 rounded-full border-2 border-gray-300 object-cover"
+              className="w-32 h-32 rounded-full object-cover border-4 border-blue-500"
+              whileHover={{ scale: 1.05 }}
             />
-            <div className="text-center md:text-left">
-              <h2 className="text-xl font-semibold text-gray-800">
-                {fullName ?? "N/A"}
-              </h2>
-              <p className="text-gray-500">{user.email}</p>
-              <p className="text-sm text-gray-400 mt-1">Role: {role}</p>
-            </div>
+            <h2 className="text-2xl font-semibold">{editUser.fullName}</h2>
+            <p className="text-gray-500">{editUser.email}</p>
+            <p className="text-sm text-gray-400">Role: {role}</p>
           </div>
 
-          <div className="mt-6 w-full text-gray-700 space-y-2 text-sm">
-            <div>
-              <span className="font-medium">ID:</span> {user.id}
-            </div>
-            <div>
-              <span className="font-medium">Username:</span> {user.userName}
-            </div>
-            <div>
-              <span className="font-medium">Email Confirmed:</span>{" "}
-              {user.emailConfirmed ? "Yes" : "No"}
-            </div>
-            <div>
-              <span className="font-medium">Phone:</span>{" "}
-              {user.phoneNumber ?? "N/A"}
-            </div>
-            <div>
-              <span className="font-medium">2FA:</span>{" "}
-              {user.twoFactorEnabled ? "Enabled" : "Disabled"}
-            </div>
-            <div>
-              <span className="font-medium">Lockout:</span>{" "}
-              {user.lockoutEnabled ? "Enabled" : "Disabled"}
-            </div>
-            <div>
-              <span className="font-medium">Failed Count:</span>{" "}
-              {user.accessFailedCount}
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-4">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            Edit Profile
-          </h2>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Username
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUserName(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="text"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Profile Photo
-            </label>
+          <div className="w-full mt-4 flex flex-col gap-2">
             <input
               type="file"
               accept="image/*"
-              onChange={handlePhotoChange}
-              className="w-full"
-              required
+              onChange={(e) => setPhoto(e.target.files[0])}
+              className="w-full border rounded-lg px-3 py-2"
             />
+            <motion.button
+              onClick={uploadPhoto}
+              disabled={!photo}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="w-full bg-blue-600 text-white py-2 rounded-lg shadow hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              Upload Photo
+            </motion.button>
           </div>
 
-          {preview && (
-            <div className="flex justify-center mb-2">
-              <img
-                src={preview}
-                alt="Preview"
-                className="w-28 h-28 rounded-full border-2 border-gray-300 object-cover"
-              />
+          <div className="mt-6 space-y-1 text-sm text-gray-700 w-full">
+            <div>
+              <strong>Username:</strong> {editUser.userName}
             </div>
-          )}
+            <div>
+              <strong>Phone:</strong> {editUser.phoneNumber || "N/A"}
+            </div>
+          </div>
+        </motion.div>
+        <motion.div
+          initial={{ x: 50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="md:col-span-2 bg-white rounded-2xl shadow-2xl p-6 flex flex-col gap-4"
+        >
+          <h2 className="text-2xl font-semibold mb-2">Edit Profile</h2>
 
-          <button
+          <motion.input
+            name="fullName"
+            value={editUser.fullName}
+            onChange={handleChange}
+            placeholder="Full Name"
+            className="w-full border rounded-lg px-3 py-2"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          />
+          <motion.input
+            name="userName"
+            value={editUser.userName}
+            onChange={handleChange}
+            placeholder="Username"
+            className="w-full border rounded-lg px-3 py-2"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.45 }}
+          />
+          <motion.input
+            type="email"
+            name="email"
+            value={editUser.email}
+            onChange={handleChange}
+            placeholder="Email"
+            className="w-full border rounded-lg px-3 py-2"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          />
+          {errors.email && (
+            <p className="text-red-600 text-sm mt-1">{errors.email}</p>
+          )}
+          <motion.input
+            type="password"
+            name="password"
+            value={editUser.password}
+            onChange={handleChange}
+            placeholder="New password (optional)"
+            className="w-full border rounded-lg px-3 py-2"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.55 }}
+          />
+          {errors.password && (
+            <p className="text-red-600 text-sm mt-1">{errors.password}</p>
+          )}
+          <motion.input
+            name="phoneNumber"
+            value={editUser.phoneNumber}
+            onChange={handleChange}
+            placeholder="Phone Number"
+            className="w-full border rounded-lg px-3 py-2"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          />
+          {errors.phoneNumber && (
+            <p className="text-red-600 text-sm mt-1">{errors.phoneNumber}</p>
+          )}
+          <motion.button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg shadow hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors mt-2"
           >
             {saving ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
-      </div>
+          </motion.button>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 using EmployeeAdministrator.Migrations;
 using EmployeeAdministrator.Modules.AuthModule.Domain;
 using EmployeeAdministrator.Modules.AuthModule.DTOs;
+using EmployeeAdministrator.Modules.AuthModule.DTOs.Photo_DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Customer = EmployeeAdministrator.Modules.AuthModule.DTOs.Customer;
@@ -25,6 +26,8 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
                 
                 var user = await _userManager.FindByIdAsync(userId);
 
+                var customer = await _dbContext.Customers.FirstOrDefaultAsync(c=>c.UserId == userId);
+
                 if (user != null)
                 {
                     var roles = await _userManager.GetRolesAsync(user);
@@ -34,7 +37,8 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
                         Success = true,
                         Message = "User Profile Returned Successfully!",
                         User = user,
-                        UserRoles = (List<string>)roles ?? new List<string>()
+                        UserRoles = (List<string>)roles ?? new List<string>(),
+                        Customer = customer
                     };
 
                     return response;
@@ -64,16 +68,20 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
 
                 var users = await _dbContext.Users.ToListAsync();
 
+
                 if (users.Any())
                 {
                     foreach (var user in users)
                     {
                         var userRoles = await _userManager.GetRolesAsync(user);
 
+                        var customerData = await _dbContext.Customers.FirstOrDefaultAsync(c=>c.UserId == user.Id);
+
                         var singleUser = new UserDTO
                         {
                             User = user,
-                            UserRoles = (List<string>)userRoles
+                            UserRoles = (List<string>)userRoles,
+                            Customer = customerData
                         };
 
                         userList.Add(singleUser);
@@ -107,7 +115,7 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
         {
             try
             {
-                var user = await _userManager.FindByIdAsync(request.userId);
+                var user = await _userManager.FindByIdAsync(request.UserId);
                 if (user == null)
                 {
                     return new EditUserResponse
@@ -138,22 +146,14 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
                         };
                     }
                 }
-                var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == request.userId);
+                var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == request.UserId);
                 if (customer == null)
                 {
                     customer = new Customer
                     {
-                        UserId = request.userId,
+                        UserId = request.UserId,
                         FullName = request.FullName ?? user.UserName
                     };
-
-                    if (request.Photo != null && request.Photo.Length > 0)
-                    {
-                        using var ms = new MemoryStream();
-                        await request.Photo.CopyToAsync(ms);
-                        customer.Photo = ms.ToArray();
-                        customer.PhotoContentType = request.Photo.ContentType;
-                    }
 
                     _dbContext.Customers.Add(customer);
                 }
@@ -162,13 +162,6 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
      
                     customer.FullName = request.FullName ?? customer.FullName;
 
-                    if (request.Photo != null && request.Photo.Length > 0)
-                    {
-                        using var ms = new MemoryStream();
-                        await request.Photo.CopyToAsync(ms);
-                        customer.Photo = ms.ToArray();
-                        customer.PhotoContentType = request.Photo.ContentType;
-                    }
                 }
 
                 await _dbContext.SaveChangesAsync();
@@ -251,6 +244,115 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
         {
             var user = await _dbContext.Customers.FirstOrDefaultAsync(x => x.UserId == userId);
             return user?.PhotoContentType;
+        }
+
+        public async Task<UploadPhotoResponse> UploadPhoto(string userId, IFormFile photo)
+        {
+            if (photo == null || photo.Length == 0)
+            {
+                return new UploadPhotoResponse
+                {
+                    Success = false,
+                    Message = "No file was provided!"
+                };
+            }
+
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+
+            if (!allowedTypes.Contains(photo.ContentType))
+            {
+                return new UploadPhotoResponse
+                {
+                    Success = false,
+                    Message = "Invalid file type!"
+                };
+            }
+
+            if (photo.Length > 2 * 1024 * 1024)
+            {
+                return new UploadPhotoResponse
+                {
+                    Success = false,
+                    Message = "File too large!"
+                };
+            }
+
+            var customer = await _dbContext.Customers.FirstOrDefaultAsync(c=>c.UserId == userId);
+            using var ms = new MemoryStream();
+
+            if (customer == null)
+            {
+                await photo.CopyToAsync(ms);
+
+                var newCustomer = new Customer
+                {
+                    UserId = userId,
+                    Photo = ms.ToArray(),
+                    PhotoContentType = photo.ContentType
+                };
+
+                await _dbContext.SaveChangesAsync();
+
+                return new UploadPhotoResponse
+                {
+                    Success = true,
+                    Message = "Photo Uploaded Successgully!"
+                };
+            }
+            await photo.CopyToAsync(ms);
+
+            customer.Photo = ms.ToArray();
+            customer.PhotoContentType = photo.ContentType;
+
+            await _dbContext.SaveChangesAsync();
+
+            return new UploadPhotoResponse
+            {
+                Success = true,
+                Message = "Photo Uploaded Successgully!"
+            };
+
+        }
+
+        public async Task<CreateCustomerResponse> CreateCustomer(CreateCustomerRequest request)
+        {
+            try
+            {
+              var customer = await _dbContext.Customers.FirstOrDefaultAsync(c=>c.UserId ==request.UserId);
+
+              if(customer == null)
+                {
+                    var newCustomer = new Customer
+                    {
+                        UserId = request.UserId,
+                        FullName = request.FullName
+                    };
+
+                    _dbContext.Customers.Add(newCustomer);
+                    await _dbContext.SaveChangesAsync();
+
+                    return new CreateCustomerResponse
+                    {
+                        Success = true,
+                        Message = "Customer Created!"
+                    };
+                }
+
+                return new CreateCustomerResponse
+                {
+                    Success = false,
+                    Message = "Customer Exists!"
+                };
+
+            }
+            catch(Exception ex)
+            {
+                return new CreateCustomerResponse
+                {
+                    Success = false,
+                    Message = "Database Error!"
+                };
+            }
         }
     }
 }

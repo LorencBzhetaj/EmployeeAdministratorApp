@@ -1,4 +1,5 @@
 ﻿using EmployeeAdministrator.Modules.AuthModule.DTOs;
+using EmployeeAdministrator.Modules.AuthModule.DTOs.Photo_DTOs;
 
 namespace EmployeeAdministrator.Modules.AuthModule.Domain
 {
@@ -13,5 +14,9 @@ namespace EmployeeAdministrator.Modules.AuthModule.Domain
         Task<DeleteUserResponse> DeleteUser(string userId);
         Task<byte[]> GetUserPhoto(string userId);
         Task<string> GetUserPhotoType(string userId);
+
+        Task<UploadPhotoResponse> UploadPhoto(string userId, IFormFile photo);
+
+        Task<CreateCustomerResponse> CreateCustomer(CreateCustomerRequest request);
     }
 }

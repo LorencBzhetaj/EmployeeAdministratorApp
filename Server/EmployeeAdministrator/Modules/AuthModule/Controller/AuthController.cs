@@ -3,6 +3,7 @@ using EmployeeAdministrator.Modules.AuthModule.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeAdministrator.Modules.AuthModule.Controller
 {
@@ -85,12 +86,38 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
         }
 
         [HttpPost("edit-user")]
-        [Authorize(Roles = "Admin,Employee")]
-        public async Task<IActionResult> EditUser([FromForm]EditUserRequest editUserRequest)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> EditUser(EditUserRequest editUserRequest)
         {
             try
             {
                 var response = await _authService.EditUser(editUserRequest);
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("edit-user-employee")]
+        [Authorize(Roles = "Admin,Employee")]
+        public async Task<IActionResult> EditUserEmployee(EditUserEmployeeRequest editUserRequest)
+        {
+            try
+            {
+                var request = new EditUserRequest
+                {
+                    UserId = editUserRequest.UserId,
+                    UserName = editUserRequest?.UserName,
+                    Password = editUserRequest?.Password,
+                    Email = editUserRequest?.Email,
+                    PhoneNumber = editUserRequest?.PhoneNumber,
+                    FullName = editUserRequest?.FullName,
+                };
+
+                var response = await _authService.EditUser(request);
 
                 return Ok(response);
             }
@@ -120,12 +147,31 @@ namespace EmployeeAdministrator.Modules.AuthModule.Controller
         [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> GetUserPhoto(string id)
         {
-            var (photo, photoType) = await _authService.GetUserPhoto(id);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
 
-            if (photo == null || string.IsNullOrEmpty(photoType))
-                return NotFound();
+            var response = await _authService.GetUserPhoto(id);
 
-            return File(photo, photoType);
+            return Ok(response);
         }
+
+
+        [HttpPost("uploadPhoto/{userId}")]
+        [Consumes("multipart/form-data")]
+        [Authorize(Roles = "Admin,Employee")]
+        public async Task<IActionResult> UploadPhoto(string userId, IFormFile photo)
+        {
+          if (!ModelState.IsValid || photo == null)
+            {
+                return BadRequest("No file was uploaded!");
+            }
+
+          var response = await _authService.UploadPhoto(userId, photo);
+
+          return Ok(response);
+        }
+
     }
 }

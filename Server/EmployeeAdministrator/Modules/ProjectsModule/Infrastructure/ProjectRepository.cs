@@ -1,7 +1,10 @@
 ﻿using EmployeeAdministrator.DataLayer;
+using EmployeeAdministrator.Migrations;
 using EmployeeAdministrator.Modules.ProjectsModule.Domain;
 using EmployeeAdministrator.Modules.ProjectsModule.DTOs;
+using EmployeeAdministrator.Modules.ProjectsModule.DTOs.User;
 using Microsoft.EntityFrameworkCore;
+using Task = EmployeeAdministrator.Migrations.Task;
 
 namespace EmployeeAdministrator.Modules.ProjectsModule.Infrastructure
 {
@@ -18,7 +21,7 @@ namespace EmployeeAdministrator.Modules.ProjectsModule.Infrastructure
         {
             try
             {
-                var newProject = new Project
+                var newProject = new DTOs.Project
                 {
                     Name = request.Name,
                     Description = request.Description,
@@ -54,12 +57,82 @@ namespace EmployeeAdministrator.Modules.ProjectsModule.Infrastructure
             {
                 var projectToBeDeleted = await _dbContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
 
-                if(projectToBeDeleted != null)
-                {
-                   _dbContext.Projects.Remove(projectToBeDeleted);
-                    await _dbContext.SaveChangesAsync();
+                var taskList = new List<TasksModule.DTOs.Task>();
 
-                    return new DeleteProjectResponse { Success = true , Message ="Project Deleted!"};
+                if (projectToBeDeleted != null)
+                {
+                    if (projectToBeDeleted.ProjectTasks.Any())
+                    {
+                        foreach (var task in projectToBeDeleted.ProjectTasks)
+                        {
+                            var existingTask = _dbContext.Tasks.Where(t => t.Id.ToString() == task).FirstOrDefault();
+
+                            if (existingTask != null)
+                            {
+                                taskList.Add(existingTask);
+                            }
+                        }
+
+                        var areAllTasksCompleted = true;
+
+                        foreach (var task in taskList)
+                        {
+                            if (task.IsCompleted == false)
+                            {
+                                areAllTasksCompleted = false;
+                            }
+                        }
+
+                        if (areAllTasksCompleted == false)
+                        {
+                            return new DeleteProjectResponse
+                            {
+                                Success = false,
+                                Message = "Project has not completed tasks on it and cannot be deleted!"
+                            };
+                        }
+
+                        var deletedProject = new ProjectDTO
+                        {
+                            Id = projectToBeDeleted.Id,
+                            Name = projectToBeDeleted.Name,
+                            Description = projectToBeDeleted.Description,
+                            CreatedAt = projectToBeDeleted.CreatedAt,
+                            DueDate = projectToBeDeleted.DueDate,
+                            AssignedUserIds = projectToBeDeleted.AssignedUserIds,
+                            ProjectTasks = projectToBeDeleted.ProjectTasks,
+                            IsCompleted = projectToBeDeleted.IsCompleted,
+                            IsDeletedOn = DateTime.Now,
+                        };
+
+                        _dbContext.DeletedProjects.Add(deletedProject);
+
+                        _dbContext.Projects.Remove(projectToBeDeleted);
+                        await _dbContext.SaveChangesAsync();
+
+                        return new DeleteProjectResponse { Success = true, Message = "Project Deleted!" };
+                    }
+                    else
+                    {
+                        var deletedProject = new ProjectDTO
+                        {
+                            Name = projectToBeDeleted.Name,
+                            Description = projectToBeDeleted.Description,
+                            CreatedAt = projectToBeDeleted.CreatedAt,
+                            DueDate = projectToBeDeleted.DueDate,
+                            AssignedUserIds = projectToBeDeleted.AssignedUserIds,
+                            ProjectTasks = projectToBeDeleted.ProjectTasks,
+                            IsCompleted = projectToBeDeleted.IsCompleted,
+                            IsDeletedOn = DateTime.Now,
+                        };
+
+                        _dbContext.DeletedProjects.Add(deletedProject);
+
+                        _dbContext.Projects.Remove(projectToBeDeleted);
+                        await _dbContext.SaveChangesAsync();
+
+                        return new DeleteProjectResponse { Success = true, Message = "Project Deleted!" };
+                    } 
                 }
 
                 return new DeleteProjectResponse
@@ -153,6 +226,127 @@ namespace EmployeeAdministrator.Modules.ProjectsModule.Infrastructure
                 {
                     Success = false,
                     Message = "Repository Error: " + e.Message,
+                };
+            }
+        }
+
+        public async Task<GetProjectUsersResponse> GetProjectUsers(int projectId)
+        {
+            try
+            {
+                var response = new GetProjectUsersResponse();
+
+                var project = await _dbContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+
+                if(project != null)
+                {
+                    foreach(var userId in project.AssignedUserIds)
+                    {
+                        var singleUser = await _dbContext.Users.FirstOrDefaultAsync(u=>u.Id == userId);
+
+                        if(singleUser != null)
+                        {
+                            var user = new UserDto
+                            {
+                                UserName = singleUser.UserName,
+                                Id = singleUser.Id,
+                                Email = singleUser.Email,
+                                PhoneNumber = singleUser?.PhoneNumber ?? ""
+                            };
+
+                            response.Users.Add(user);
+                        }
+                    }
+
+                    response.Success = true;
+                    response.Message = "Project Users Returned Successfully!";
+
+                    return response;
+                }
+
+                response.Success = false;
+                response.Message = "Project Was Not Found!";
+
+                return response;
+
+            }catch(Exception e)
+            {
+                return new GetProjectUsersResponse
+                {
+                    Success = false,
+                    Message = "Error : " + e.Message,
+                };
+            }
+        }
+
+        public async Task<RemoveUserFromProjectResponse> RemoveUserFromProject(string userId ,int projectId)
+        {
+            try
+            {
+                var project = await _dbContext.Projects.FirstOrDefaultAsync(p => p.Id==projectId);
+
+                if(project != null)
+                {
+                    project.AssignedUserIds.Remove(userId);
+                    _dbContext.SaveChanges();
+                }
+
+                return new RemoveUserFromProjectResponse { Success = true , Message = "User Removed From Project!"};
+
+            }catch( Exception e )
+            {
+                return new RemoveUserFromProjectResponse { Success = false, Message = "Error : " + e.Message };
+            }
+        }
+
+        public async Task<AddUserToProjectResponse> AddUserToProject(string userId, int projectId)
+        {
+            try
+            {
+                var project = await _dbContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+
+                if (project != null)
+                {
+                    if (!project.AssignedUserIds.Contains(userId))
+                    {
+                        project.AssignedUserIds.Add(userId);
+                        _dbContext.SaveChanges();
+
+                        return new AddUserToProjectResponse { Success = true, Message = "User Added To Project!" };
+                    }
+                    else
+                    {
+                        return new AddUserToProjectResponse { Success = false, Message = "User Is Already In The Project!" };
+                    }
+                }
+
+                return new AddUserToProjectResponse { Success = false, Message = "Project Was Not Found!" };
+
+            }
+            catch (Exception e)
+            {
+                return new AddUserToProjectResponse { Success = false, Message = "Error :" + e.Message };
+            }
+        }
+
+        public async Task<GetUserProjectsResponse> GetUserProjects(string userId)
+        {
+            try
+            {
+                var projects = await _dbContext.Projects.Where(p=>p.AssignedUserIds.Contains(userId)).ToListAsync();
+
+                return new GetUserProjectsResponse
+                {
+                    Success = true,
+                    Message = "User Projects Returned!",
+                    Projects = projects
+                };
+            }catch( Exception e)
+            {
+                return new GetUserProjectsResponse
+                {
+                    Success = false,
+                    Message = "Error: "+e.Message,
                 };
             }
         }
