@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # SQL Server Database
@@ -53,20 +53,20 @@ services:
       start_period: 40s
 
   # Frontend
-  frontend:
-    build:
-      context: ./Client/employee-administrator
-      dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=http://localhost:8080
-    container_name: employee-admin-frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      api:
-        condition: service_healthy
-    networks:
-      - app-network
+  # frontend:
+  #  build:
+  #   context: ./Client/employee-administrator
+  #  dockerfile: Dockerfile
+  # args:
+  #  - VITE_API_URL=http://localhost:8080
+  # container_name: employee-admin-frontend
+  # ports:
+  #   - "3000:80"
+  # depends_on:
+  #   api:
+  #     condition: service_healthy
+  # networks:
+  #   - app-network
 
 networks:
   app-network:

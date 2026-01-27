@@ -19,6 +19,8 @@ namespace EmployeeAdministrator.DataLayer
 
         public DbSet<EmployeeAdministrator.Modules.TasksModule.DTOs.Task> Tasks { get; set; }
 
+        public DbSet<DeletedTask> DeletedTasks { get; set; }
+
         public DbSet<Customer> Customers { get; set; }
     }
 }
