@@ -73,7 +73,6 @@ namespace EmployeeAdministrator.Modules.TasksModule.Infrastructure
 
                     var deletedTask = new DeletedTask
                     {
-                        Id = taskToBeDeleted.Id,
                         Title = taskToBeDeleted.Title,
                         Description = taskToBeDeleted.Description,
                         IsCompleted = taskToBeDeleted.IsCompleted,

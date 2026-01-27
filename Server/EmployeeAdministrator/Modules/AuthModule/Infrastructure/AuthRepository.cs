@@ -199,6 +199,28 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
 
                 if (user != null)
                 {
+
+                    var DeletedUser = new DTOs.DeletedUser
+                    {
+                        Id = user.Id,
+                        UserId = user.Id,
+                        UserName = user.UserName,
+                        NormalizedEmail = user.NormalizedEmail,
+                        Email = user.Email,
+                        NormalizedUserName = user.NormalizedUserName,
+                        EmailConfirmed = user.EmailConfirmed,
+                        PasswordHash = user.PasswordHash,
+                        SecurityStamp = user.SecurityStamp,
+                        ConcurrencyStamp = user.ConcurrencyStamp,
+                        PhoneNumber = user.PhoneNumber,
+                        PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+                        TwoFactorEnabled = user.TwoFactorEnabled,
+                        LockoutEnd = user.LockoutEnd,
+                        LockoutEnabled = user.LockoutEnabled,
+                        AccessFailedCount = user.AccessFailedCount
+                    };
+
+
                     var deletionResult = await _userManager.DeleteAsync(user);
 
                     if (!deletionResult.Succeeded)
@@ -210,11 +232,16 @@ namespace EmployeeAdministrator.Modules.AuthModule.Infrastructure
                         };
                     }
 
+                    _dbContext.DeletedUsers.Add(DeletedUser);
+                    await _dbContext.SaveChangesAsync();
+
                     return new DeleteUserResponse
                     {
                         Success = true,
                         Message = "User Deleted Successfully!"
+
                     };
+
                 }
 
                 return new DeleteUserResponse

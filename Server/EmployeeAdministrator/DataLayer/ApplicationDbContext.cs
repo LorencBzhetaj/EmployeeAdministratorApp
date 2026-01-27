@@ -21,6 +21,8 @@ namespace EmployeeAdministrator.DataLayer
 
         public DbSet<DeletedTask> DeletedTasks { get; set; }
 
+        public DbSet<DeletedUser> DeletedUsers { get; set; }
+
         public DbSet<Customer> Customers { get; set; }
     }
 }
