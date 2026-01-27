@@ -71,6 +71,20 @@ namespace EmployeeAdministrator.Modules.TasksModule.Infrastructure
                         project.ProjectTasks.Remove(taskToBeDeleted.Id.ToString());
                     }
 
+                    var deletedTask = new DeletedTask
+                    {
+                        Id = taskToBeDeleted.Id,
+                        Title = taskToBeDeleted.Title,
+                        Description = taskToBeDeleted.Description,
+                        IsCompleted = taskToBeDeleted.IsCompleted,
+                        CreatedAt = taskToBeDeleted.CreatedAt,
+                        DueDate = taskToBeDeleted.DueDate,
+                        ProjectId = taskToBeDeleted.ProjectId,
+                        AssignedUserIds = taskToBeDeleted.AssignedUserIds,
+                    };
+
+                    _dbContext.DeletedTasks.Add(deletedTask);
+
                     _dbContext.Tasks.Remove(taskToBeDeleted);
                     await _dbContext.SaveChangesAsync();
 
