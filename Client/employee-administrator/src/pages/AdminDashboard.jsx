@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import UserManager from "../components/admin/UserManager";
-import ProjectManager from "../components/admin/ProjectManager";
+import UserManager from "../components/Admin/UserManager";
+import ProjectManager from "../components/Admin/ProjectManager";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("welcome");
