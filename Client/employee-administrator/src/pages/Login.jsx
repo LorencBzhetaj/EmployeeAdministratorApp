@@ -16,8 +16,8 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    if (!isValidGmail(email)) {
-      setError("Only Gmail addresses (@gmail.com) are allowed.");
+    if (!isValidGmail(email) && !isValidYahoo(email)) {
+      setError("Only Gmail addresses (@gmail.com) and Yahoo addresses (@yahoo.com) are allowed.");
       return;
     }
 
@@ -47,6 +47,10 @@ export default function Login() {
   const isValidGmail = (email) => {
     return /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email);
   };
+
+  const isValidYahoo = (email) => {
+    return /^[a-zA-Z0-9._%+-]+@yahoo\.com$/.test(email);
+  }
 
   return (
     <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500">

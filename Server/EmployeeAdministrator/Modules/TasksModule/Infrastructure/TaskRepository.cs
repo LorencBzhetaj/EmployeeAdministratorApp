@@ -30,6 +30,18 @@ namespace EmployeeAdministrator.Modules.TasksModule.Infrastructure
                     AssignedUserIds = request.AssignedUserIds,
                 };
 
+                var existingTask = await _dbContext.Tasks.FirstOrDefaultAsync(t => t.Title == request.Title && t.ProjectId == request.ProjectId);
+
+                if (existingTask != null)
+                {
+                    return new CreateTaskResponse
+                    {
+                        Success = false,
+                        Message = "Task Already Exists"
+                    };
+                }
+
+
                 _dbContext.Tasks.Add(newTask);
                 await _dbContext.SaveChangesAsync();
 

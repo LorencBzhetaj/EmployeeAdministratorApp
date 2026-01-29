@@ -32,6 +32,7 @@ export default function UserManager() {
     const newErrors = {};
 
     const isGmail = (email) => /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email);
+    const isYahoo = (email) => /^[a-zA-Z0-9._%+-]+@yahoo\.com$/.test(email);
 
     if (!form.userName.trim()) {
       newErrors.userName = "Username is required";
@@ -39,9 +40,10 @@ export default function UserManager() {
 
     if (!form.email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!isGmail(form.email)) {
-      newErrors.email = "Only Gmail addresses are allowed";
+    } else if (!isGmail(form.email) && !isYahoo(form.email)) {
+      newErrors.email = "Only Gmail addresses (@gmail.com) and Yahoo addresses (@yahoo.com) are allowed.";
     }
+
 
     if (!passwordRegex.test(form.password)) {
       newErrors.password =
